@@ -1,3 +1,4 @@
+using ShopMgmt.Domain.Enums;
 namespace ShopMgmt.Domain.Entities;
 
 public class StockBatch
