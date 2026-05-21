@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ShopMgmt.Domain.Entities;
+using ShopMgmt.Domain.Enums;
 
 namespace ShopMgmt.Infrastructure.Context;
 
@@ -70,5 +71,9 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(a => a.CreatedBy)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Alert>()
+            .Property(a => a.Type)
+            .HasConversion<string>();
     }
 }
