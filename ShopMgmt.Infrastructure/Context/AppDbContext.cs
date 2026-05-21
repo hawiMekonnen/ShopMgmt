@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using ShopMgmt.Domain.Entities;
+using ShopMgmt.Domain.Enums;
 
 namespace ShopMgmt.Infrastructure.Context;
 

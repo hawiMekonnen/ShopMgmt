@@ -62,10 +62,18 @@ builder.Services.AddCors(options =>
 // Register Repositories
 builder.Services.AddScoped<IShopRepository, ShopRepository>();
 builder.Services.AddScoped<IMaterialUsageRepository, MaterialUsageRepository>();
+builder.Services.AddScoped<IAlertRepository, AlertRepository>();
+builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 // Register Services
 builder.Services.AddScoped<IShopService, ShopService>();
 builder.Services.AddScoped<IMaterialUsageService, MaterialUsageService>();
+builder.Services.AddScoped<IAlertService, AlertService>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddScoped<IReportService, ReportService>();
+
+// Register Background Services
+builder.Services.AddHostedService<AlertMonitorService>();
 
 var app = builder.Build();
 

@@ -1,18 +1,14 @@
-using ShopMgmt.Domain.Enums;
-
-namespace ShopMgmt.Domain.Entities;
-
-public class Alert
+using System;
+namespace ShopMgmt.Application.DTOS;
+public class AlertDto
 {
     public int AlertId { get; set; }
     public int MaterialId { get; set; }
-    public Material Material { get; set; } = null!;
+    public string MaterialName { get; set; } = string.Empty;
     public decimal Threshold { get; set; }
     public decimal CurrentQuantity { get; set; }
     public DateTime TriggeredAt { get; set; }
     public DateTime? ResolvedAt { get; set; }
-    public int CreatedBy { get; set; }
-    public User User { get; set; } = null!;
-    public AlertType Type { get; set; }
     public string? ResolvedNote { get; set; }
+    public string Type { get; set; } = string.Empty;
 }
