@@ -9,4 +9,7 @@ public class StockBatch
     public DateTime ReceivedAt { get; set; }
     public DateTime? ExpiryDate { get; set; }
     public decimal CostTotal { get; set; }
+    public MaterialStatus Status { get; set; } = MaterialStatus.Pending;
+    public DateTime? QuarantineDate { get; set; }
+    public string? QuarantineReason { get; set; }
 }

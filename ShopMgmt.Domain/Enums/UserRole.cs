@@ -1,9 +1,11 @@
-namespace ShopMgmt.Domain.Enums;
-
-public enum UserRole
+namespace ShopMgmt.Domain.Enums
 {
-    Technician,
-    Supervisor,
-    Procurement,
-    Finance
+    public enum UserRole
+    {
+        Admin,
+        ShopManager,
+        Technician,
+        Procurement,
+        Finance
+    }
 }

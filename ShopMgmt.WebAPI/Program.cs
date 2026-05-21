@@ -6,6 +6,10 @@ using ShopMgmt.Infrastructure.Repositories;
 using ShopMgmt.Application;
 using ShopMgmt.Infrastructure;
 using ShopMgmt.WebAPI.Middleware;
+using ShopMgmt.Application.Interfaces.Repositories;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using System.Text;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +18,33 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
+
+// JWT Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Secret"]);
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(key),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+// Role-based policies
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("RequireAdmin", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("RequireShopManager", policy => policy.RequireRole("ShopManager"));
+    options.AddPolicy("RequireTechnician", policy => policy.RequireRole("Technician"));
+    options.AddPolicy("RequireProcurement", policy => policy.RequireRole("Procurement"));
+    options.AddPolicy("RequireFinance", policy => policy.RequireRole("Finance"));
+});
 
 builder.Services.AddCors(options =>
 {
@@ -31,7 +62,7 @@ builder.Services.AddCors(options =>
 // Register Repositories
 builder.Services.AddScoped<IShopRepository, ShopRepository>();
 builder.Services.AddScoped<IMaterialUsageRepository, MaterialUsageRepository>();
-
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 // Register Services
 builder.Services.AddScoped<IShopService, ShopService>();
 builder.Services.AddScoped<IMaterialUsageService, MaterialUsageService>();
@@ -47,6 +78,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("SpaClient");
+app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
