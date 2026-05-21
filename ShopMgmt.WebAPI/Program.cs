@@ -71,12 +71,14 @@ builder.Services.AddScoped<IMaterialUsageRepository, MaterialUsageRepository>();
 builder.Services.AddScoped<IAlertRepository, AlertRepository>();
 builder.Services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IServiceabilityCheckRepository, ServiceabilityCheckRepository>();
 // Register Services
 builder.Services.AddScoped<IShopService, ShopService>();
 builder.Services.AddScoped<IMaterialUsageService, MaterialUsageService>();
 builder.Services.AddScoped<IAlertService, AlertService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IServiceabilityCheckService, ServiceabilityCheckService>();
 
 // Register Background Services
 builder.Services.AddHostedService<AlertMonitorService>();
