@@ -19,4 +19,8 @@
     <ProjectReference Include="..\ShopMgmt.Infrastructure\ShopMgmt.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Controllers\" />
+  </ItemGroup>
+
 </Project>

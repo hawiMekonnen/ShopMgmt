@@ -1,6 +1,8 @@
-using ShopMgmt.Application;
-using ShopMgmt.Infrastructure;
-using ShopMgmt.WebAPI.Middleware;
+using Microsoft.EntityFrameworkCore;
+using ShopMgmt.Application.Interface;
+using ShopMgmt.Application.Repositories;
+using ShopMgmt.Application.Services;
+using ShopMgmt.Infrastructure.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,6 +24,14 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
+
+// Register Repositories
+builder.Services.AddScoped<IShopRepository, ShopRepository>();
+builder.Services.AddScoped<IMaterialUsageRepository, MaterialUsageRepository>();
+
+// Register Services
+builder.Services.AddScoped<IShopService, ShopService>();
+builder.Services.AddScoped<IMaterialUsageService, MaterialUsageService>();
 
 var app = builder.Build();
 

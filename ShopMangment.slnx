@@ -1,7 +1,7 @@
 <Solution>
-  <Project Path="ShopMgmt.Domain/ShopMgmt.Domain.csproj" />
+  <Project Path="ShopMangment/ShopMangment.csproj" />
   <Project Path="ShopMgmt.Application/ShopMgmt.Application.csproj" />
+  <Project Path="ShopMgmt.Domain/ShopMgmt.Domain.csproj" />
   <Project Path="ShopMgmt.Infrastructure/ShopMgmt.Infrastructure.csproj" />
   <Project Path="ShopMgmt.WebAPI/ShopMgmt.WebAPI.csproj" />
-  <Project Path="ShopMgmt.Tests/ShopMgmt.Tests.csproj" />
 </Solution>
