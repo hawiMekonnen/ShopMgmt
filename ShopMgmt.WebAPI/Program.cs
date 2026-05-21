@@ -3,19 +3,30 @@ using ShopMgmt.Application.Interface;
 using ShopMgmt.Application.Repositories;
 using ShopMgmt.Application.Services;
 using ShopMgmt.Infrastructure.Repositories;
-using ShopMgmt.Infrastructure.BackgroundServices;
-using ShopMgmt.Infrastructure.Services;
+using ShopMgmt.Application;
+using ShopMgmt.Infrastructure;
+using ShopMgmt.WebAPI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddDbContext<ShopMgmt.Infrastructure.Context.AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Server=(localdb)\\mssqllocaldb;Database=ShopMgmtDb;Trusted_Connection=True;MultipleActiveResultSets=true"));
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("SpaClient", policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "https://localhost:5173")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 // Register Repositories
 builder.Services.AddScoped<IShopRepository, ShopRepository>();
@@ -35,16 +46,16 @@ builder.Services.AddHostedService<AlertMonitorService>();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
-
+app.UseCors("SpaClient");
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
