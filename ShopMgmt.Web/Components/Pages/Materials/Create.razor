@@ -1,0 +1,83 @@
+@page "/materials/create"
+@rendermode InteractiveServer
+@inject MaterialApiClient Materials
+@inject CategoryApiClient Categories
+@inject NavigationManager Nav
+
+<PageTitle>New Material</PageTitle>
+
+<h1>New material</h1>
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <p class="error">@_error</p>
+}
+
+<EditForm Model="_model" OnValidSubmit="SaveAsync">
+    <DataAnnotationsValidator />
+    <div class="form-group">
+        <label>Name</label>
+        <InputText @bind-Value="_model.Name" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label>Category</label>
+        <InputSelect @bind-Value="_model.CategoryId" class="form-control">
+            <option value="0">-- Select --</option>
+            @foreach (var c in _categories)
+            {
+                <option value="@c.CategoryId">@c.Name</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="form-group">
+        <label>Unit price</label>
+        <InputNumber @bind-Value="_model.UnitPrice" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label>Unit</label>
+        <InputText @bind-Value="_model.Unit" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary" disabled="@_saving">Save</button>
+    <a class="btn" href="materials">Cancel</a>
+</EditForm>
+
+@code {
+    private CreateMaterialDto _model = new() { Unit = "ea" };
+    private List<CategoryDto> _categories = [];
+    private string? _error;
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync()
+        => _categories = (await Categories.GetAllAsync()).ToList();
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        _error = null;
+        try
+        {
+            if (_model.CategoryId <= 0)
+            {
+                _error = "Please select a category.";
+                return;
+            }
+
+            var created = await Materials.CreateAsync(_model);
+            if (created is null)
+            {
+                _error = "Failed to create material.";
+                return;
+            }
+
+            Nav.NavigateTo("materials");
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+}

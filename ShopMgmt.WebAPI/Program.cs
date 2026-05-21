@@ -1,28 +1,41 @@
-using Microsoft.EntityFrameworkCore;
+using ShopMgmt.Application;
+using ShopMgmt.Infrastructure;
+using ShopMgmt.WebAPI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-builder.Services.AddDbContext<ShopMgmt.Infrastructure.Context.AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Server=(localdb)\\mssqllocaldb;Database=ShopMgmtDb;Trusted_Connection=True;MultipleActiveResultSets=true"));
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("BlazorClient", policy =>
+    {
+        policy.WithOrigins(
+                "https://localhost:7150",
+                "http://localhost:5150",
+                "https://localhost:7120",
+                "http://localhost:5222")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
-
+app.UseCors("BlazorClient");
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

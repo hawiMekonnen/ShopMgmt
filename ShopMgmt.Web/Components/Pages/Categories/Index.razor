@@ -1,0 +1,151 @@
+@page "/categories"
+@rendermode InteractiveServer
+@inject CategoryApiClient Categories
+
+<PageTitle>Categories</PageTitle>
+
+<h1>Categories</h1>
+
+@if (!string.IsNullOrEmpty(_error))
+{
+    <p class="error">@_error</p>
+}
+
+<div class="split">
+    <section>
+        <h2>@( _editingId is null ? "Add category" : "Edit category" )</h2>
+        <EditForm Model="_form" OnValidSubmit="SaveAsync">
+            <div class="form-group">
+                <label>Name</label>
+                <InputText @bind-Value="_form.Name" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <InputText @bind-Value="_form.Description" class="form-control" />
+            </div>
+            <button type="submit" class="btn btn-primary" disabled="@_saving">@(_editingId is null ? "Create" : "Update")</button>
+            @if (_editingId is not null)
+            {
+                <button type="button" class="btn" @onclick="CancelEdit">Cancel</button>
+            }
+        </EditForm>
+    </section>
+
+    <section>
+        <h2>All categories</h2>
+        @if (_loading)
+        {
+            <p>Loading…</p>
+        }
+        else
+        {
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th class="num">Materials</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var c in _items)
+                    {
+                        <tr>
+                            <td>@c.Name</td>
+                            <td>@(c.Description ?? "—")</td>
+                            <td class="num">@c.MaterialCount</td>
+                            <td class="actions">
+                                <button class="btn-link" @onclick="() => StartEdit(c)">Edit</button>
+                                <button class="btn-link danger" @onclick="() => DeleteAsync(c.CategoryId)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </section>
+</div>
+
+@code {
+    private List<CategoryDto> _items = [];
+    private CreateCategoryDto _form = new();
+    private int? _editingId;
+    private string? _error;
+    private bool _loading = true;
+    private bool _saving;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        try
+        {
+            _items = (await Categories.GetAllAsync()).ToList();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+
+    private void StartEdit(CategoryDto c)
+    {
+        _editingId = c.CategoryId;
+        _form = new CreateCategoryDto { Name = c.Name, Description = c.Description };
+    }
+
+    private void CancelEdit()
+    {
+        _editingId = null;
+        _form = new CreateCategoryDto();
+    }
+
+    private async Task SaveAsync()
+    {
+        _saving = true;
+        _error = null;
+        try
+        {
+            if (_editingId is null)
+            {
+                var created = await Categories.CreateAsync(_form);
+                if (created is null) { _error = "Create failed."; return; }
+            }
+            else
+            {
+                var updated = await Categories.UpdateAsync(_editingId.Value, new UpdateCategoryDto
+                {
+                    Name = _form.Name,
+                    Description = _form.Description
+                });
+                if (updated is null) { _error = "Update failed."; return; }
+            }
+
+            _form = new CreateCategoryDto();
+            _editingId = null;
+            await LoadAsync();
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _saving = false;
+        }
+    }
+
+    private async Task DeleteAsync(int id)
+    {
+        _error = null;
+        if (!await Categories.DeleteAsync(id))
+            _error = "Delete failed — category may have linked materials.";
+        await LoadAsync();
+    }
+}
