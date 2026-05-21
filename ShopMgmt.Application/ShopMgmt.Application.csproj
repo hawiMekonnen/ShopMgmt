@@ -1,7 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
     <ProjectReference Include="..\ShopMgmt.Domain\ShopMgmt.Domain.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="DTOS\" />
+    <Folder Include="Interface\" />
+    <Folder Include="Mappers\" />
+    <Folder Include="Services\" />
   </ItemGroup>
 
   <PropertyGroup>
