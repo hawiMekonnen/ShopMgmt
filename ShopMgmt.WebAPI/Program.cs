@@ -83,6 +83,7 @@ builder.Services.AddHostedService<AlertMonitorService>();
 
 var app = builder.Build();
 
+app.UseSerilogRequestLogging();
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())

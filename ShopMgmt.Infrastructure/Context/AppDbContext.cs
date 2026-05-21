@@ -18,6 +18,7 @@ public class AppDbContext : DbContext
     public DbSet<StockBatch> StockBatches { get; set; } = null!;
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
     public DbSet<Alert> Alerts { get; set; } = null!;
+public DbSet<ServiceabilityCheck> ServiceabilityChecks { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
