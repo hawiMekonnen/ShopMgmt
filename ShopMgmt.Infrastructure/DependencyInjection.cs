@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ShopMgmt.Application.Interfaces;
 using ShopMgmt.Application.Interfaces.Repositories;
+using ShopMgmt.Application.Repositories;
 using ShopMgmt.Infrastructure.Audit;
 using ShopMgmt.Infrastructure.Context;
 using ShopMgmt.Infrastructure.Repositories;
@@ -22,7 +23,8 @@ public static class DependencyInjection
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IMaterialRepository, MaterialRepository>();
         services.AddScoped<IStockBatchRepository, StockBatchRepository>();
-        services.AddScoped<IAuditRecorder, NoOpAuditRecorder>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<IAuditRecorder, DbAuditRecorder>();
 
         return services;
     }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ShopMgmt.Application.Interface;
 using ShopMgmt.Application.Repositories;
+using ShopMgmt.Application.Interfaces.Repositories;
 using ShopMgmt.Application.DTOS;
 using ShopMgmt.Domain.Entities;
 using ShopMgmt.Domain.Enums;
@@ -14,11 +15,19 @@ public class AlertService : IAlertService
 {
     private readonly IAlertRepository _alertRepository;
     private readonly IAuditLogService _auditLogService;
+    private readonly IMaterialRepository _materialRepository;
+    private readonly IStockBatchRepository _stockBatchRepository;
 
-    public AlertService(IAlertRepository alertRepository, IAuditLogService auditLogService)
+    public AlertService(
+        IAlertRepository alertRepository,
+        IAuditLogService auditLogService,
+        IMaterialRepository materialRepository,
+        IStockBatchRepository stockBatchRepository)
     {
         _alertRepository = alertRepository;
         _auditLogService = auditLogService;
+        _materialRepository = materialRepository;
+        _stockBatchRepository = stockBatchRepository;
     }
 
     private static AlertDto MapToDto(Alert alert)
@@ -33,7 +42,8 @@ public class AlertService : IAlertService
             TriggeredAt = alert.TriggeredAt,
             ResolvedAt = alert.ResolvedAt,
             ResolvedNote = alert.ResolvedNote,
-            Type = alert.Type.ToString()
+            Type = alert.Type.ToString(),
+            CreatedByName = alert.User?.Name ?? string.Empty
         };
     }
 
@@ -57,14 +67,51 @@ public class AlertService : IAlertService
 
     public async Task CheckAndCreateLowStockAlertsAsync()
     {
-        // Iterate all materials and check on‑hand quantity
-        // Assuming a Material repository exists in the system (not part of Member 3). Here we fetch via context directly.
-        // Placeholder implementation – actual material access should be added later.
-        // This method will be invoked by the background service.
+        const decimal threshold = 10m;
+        var rows = await _materialRepository.GetAllWithInventoryAsync();
+
+        foreach (var row in rows.Where(r => r.OnHand < threshold))
+        {
+            bool exists = await _alertRepository.ActiveAlertExistsAsync(
+                row.Material.MaterialId, AlertType.LowStock);
+
+            if (!exists)
+            {
+                await _alertRepository.AddAsync(new Alert
+                {
+                    MaterialId = row.Material.MaterialId,
+                    Type = AlertType.LowStock,
+                    Threshold = threshold,
+                    CurrentQuantity = row.OnHand,
+                    TriggeredAt = DateTime.UtcNow,
+                    CreatedBy = 1
+                });
+            }
+        }
     }
 
     public async Task CheckAndCreateExpiryAlertsAsync()
     {
-        // Placeholder for expiry check logic – similar to low‑stock.
+        var cutoff = DateTime.UtcNow.AddDays(30);
+        var expiring = await _stockBatchRepository.GetExpiringBeforeAsync(cutoff);
+
+        foreach (var batch in expiring)
+        {
+            bool exists = await _alertRepository.ActiveAlertExistsAsync(
+                batch.MaterialId, AlertType.ExpiryWarning);
+
+            if (!exists)
+            {
+                await _alertRepository.AddAsync(new Alert
+                {
+                    MaterialId = batch.MaterialId,
+                    Type = AlertType.ExpiryWarning,
+                    Threshold = 0,
+                    CurrentQuantity = batch.QuantityReceived,
+                    TriggeredAt = DateTime.UtcNow,
+                    CreatedBy = 1
+                });
+            }
+        }
     }
 }

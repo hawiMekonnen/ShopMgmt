@@ -80,6 +80,7 @@ public DbSet<ServiceabilityCheck> ServiceabilityChecks { get; set; } = null!;
 
         modelBuilder.Entity<Alert>(entity =>
         {
+            entity.Property(a => a.Type).HasConversion<string>();
             entity.Property(a => a.Threshold).HasColumnType("decimal(18,2)");
             entity.Property(a => a.CurrentQuantity).HasColumnType("decimal(18,2)");
 

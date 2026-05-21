@@ -18,7 +18,7 @@ namespace ShopMgmt.Infrastructure.Repositories
 
         public async Task<List<AuditLog>> GetAllAsync(string? entity, int? performedBy, DateTime? from, DateTime? to, int page, int pageSize)
         {
-            var query = _context.AuditLogs.AsQueryable();
+            var query = _context.AuditLogs.Include(l => l.User).AsQueryable();
             if (!string.IsNullOrWhiteSpace(entity))
                 query = query.Where(l => l.Entity == entity);
             if (performedBy.HasValue)

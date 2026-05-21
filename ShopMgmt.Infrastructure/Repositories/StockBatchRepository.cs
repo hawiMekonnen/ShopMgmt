@@ -33,4 +33,10 @@ public class StockBatchRepository : IStockBatchRepository
         _context.StockBatches.Remove(batch);
         await _context.SaveChangesAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyList<StockBatch>> GetExpiringBeforeAsync(DateTime cutoffDate, CancellationToken cancellationToken = default)
+        => await _context.StockBatches
+            .Where(b => b.ExpiryDate.HasValue && b.ExpiryDate.Value <= cutoffDate)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
 }
