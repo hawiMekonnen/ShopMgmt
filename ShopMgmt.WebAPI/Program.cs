@@ -3,6 +3,9 @@ using ShopMgmt.Application.Interface;
 using ShopMgmt.Application.Repositories;
 using ShopMgmt.Application.Services;
 using ShopMgmt.Infrastructure.Repositories;
+using ShopMgmt.Application;
+using ShopMgmt.Infrastructure;
+using ShopMgmt.WebAPI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
