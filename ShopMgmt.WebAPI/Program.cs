@@ -9,12 +9,18 @@ using ShopMgmt.WebAPI.Middleware;
 using ShopMgmt.Application.Interfaces.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
+using Serilog;
+using FluentValidation.AspNetCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Host.UseSerilog((ctx, lc) => lc.ReadFrom.Configuration(ctx.Configuration));
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
+// Register FluentValidation
+builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddValidatorsFromAssemblyContaining<UpdateMaterialDtoValidator>();
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
