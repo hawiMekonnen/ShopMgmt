@@ -24,7 +24,6 @@ Or run the helper scripts (they source that automatically):
 ```bash
 ./scripts/db-update.sh    # migrations
 ./scripts/run-api.sh      # API https://localhost:7120
-./scripts/run-web.sh      # Blazor https://localhost:7150
 ```
 
 **Permanent fix:** In Windows Environment Variables, move `C:\Program Files\dotnet` **above** `C:\Program Files (x86)\dotnet` in `Path`, or remove the x86 entry. Restart the terminal.
@@ -52,13 +51,7 @@ Or run the helper scripts (they source that automatically):
    dotnet run --project ShopMgmt.WebAPI
    ```
 
-3. **Blazor UI** (`https://localhost:7150`):
-
-   ```bash
-   dotnet run --project ShopMgmt.Web
-   ```
-
-Configure API URL in `ShopMgmt.Web/appsettings.Development.json` → `ApiBaseUrl`.
+UI is built separately in React (another folder). CORS allows `http://localhost:3000` and `http://localhost:5173` by default; add more origins in `ShopMgmt.WebAPI/Program.cs` if needed.
 
 ### Tests
 

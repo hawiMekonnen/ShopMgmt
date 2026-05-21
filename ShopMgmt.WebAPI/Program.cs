@@ -12,13 +12,12 @@ builder.Services.AddOpenApi();
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("BlazorClient", policy =>
+    options.AddPolicy("SpaClient", policy =>
     {
         policy.WithOrigins(
-                "https://localhost:7150",
-                "http://localhost:5150",
-                "https://localhost:7120",
-                "http://localhost:5222")
+                "http://localhost:3000",
+                "http://localhost:5173",
+                "https://localhost:5173")
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -34,7 +33,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("BlazorClient");
+app.UseCors("SpaClient");
 app.UseAuthorization();
 app.MapControllers();
 

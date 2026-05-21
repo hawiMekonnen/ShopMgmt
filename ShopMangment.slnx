@@ -3,6 +3,5 @@
   <Project Path="ShopMgmt.Application/ShopMgmt.Application.csproj" />
   <Project Path="ShopMgmt.Infrastructure/ShopMgmt.Infrastructure.csproj" />
   <Project Path="ShopMgmt.WebAPI/ShopMgmt.WebAPI.csproj" />
-  <Project Path="ShopMgmt.Web/ShopMgmt.Web.csproj" />
   <Project Path="ShopMgmt.Tests/ShopMgmt.Tests.csproj" />
 </Solution>
