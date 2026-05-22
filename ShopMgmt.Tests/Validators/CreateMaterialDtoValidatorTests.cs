@@ -11,6 +11,7 @@ public class CreateMaterialDtoValidatorTests
         var validator = new CreateMaterialDtoValidator();
         var result = validator.Validate(new CreateMaterialDto
         {
+            PartNumber = "PN-1",
             Name = "",
             CategoryId = 1,
             UnitPrice = 1m,

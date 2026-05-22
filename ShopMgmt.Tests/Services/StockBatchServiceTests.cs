@@ -23,6 +23,7 @@ public class StockBatchServiceTests
 
         var material = new Material
         {
+            PartNumber = "PN-OIL",
             Name = "Oil",
             CategoryId = category.CategoryId,
             UnitPrice = 20m,
@@ -53,6 +54,7 @@ public class StockBatchServiceTests
         var inventory = await materialRepo.GetInventoryAsync(material.MaterialId);
         Assert.NotNull(inventory);
         Assert.Equal(50m, inventory.OnHand);
-        Assert.Equal(1000m, inventory.StockValue);
+        Assert.Equal(0m, inventory.Available);
+        Assert.Equal(50m, inventory.Blocked);
     }
 }

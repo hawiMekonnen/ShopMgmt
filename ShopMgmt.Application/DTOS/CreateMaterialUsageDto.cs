@@ -19,4 +19,8 @@ public class CreateMaterialUsageDto
     
     [Required]
     public int UserId { get; set; }
+
+    public int? RequestId { get; set; }
+    public int? IssuedByUserId { get; set; }
+    public int? CollectedByUserId { get; set; }
 }

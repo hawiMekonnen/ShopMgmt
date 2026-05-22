@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopMgmt.Application.DTOS;
 using ShopMgmt.Application.Interface;
@@ -9,6 +11,7 @@ namespace ShopMgmt.WebAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "ShopManager,Admin")]
 public class MaterialUsagesController : ControllerBase
 {
     private readonly IMaterialUsageService _usageService;

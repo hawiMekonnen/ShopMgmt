@@ -1,5 +1,3 @@
-using System;
-
 namespace ShopMgmt.Application.DTOS;
 
 public class MaterialUsageDto
@@ -13,4 +11,7 @@ public class MaterialUsageDto
     public DateTime DateUsed { get; set; }
     public string? FlightNumber { get; set; }
     public int UserId { get; set; }
+    public int? RequestId { get; set; }
+    public int? IssuedByUserId { get; set; }
+    public int? CollectedByUserId { get; set; }
 }

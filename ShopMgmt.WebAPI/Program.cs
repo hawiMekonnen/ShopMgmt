@@ -18,6 +18,7 @@ using Microsoft.IdentityModel.Tokens;
 using ShopMgmt.Application.Validators;
 using ShopMgmt.Application.Interfaces.Services;
 using ShopMgmt.Infrastructure.BackgroundServices;
+using ShopMgmt.Infrastructure.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -90,6 +91,8 @@ builder.Services.AddScoped<IServiceabilityCheckService, ServiceabilityCheckServi
 builder.Services.AddHostedService<AlertMonitorService>();
 
 var app = builder.Build();
+
+await DemoSeeder.SeedAsync(app.Services, app.Environment);
 
 app.UseSerilogRequestLogging();
 app.UseMiddleware<ExceptionHandlingMiddleware>();

@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ShopMgmt.Application.Interface;
-using ShopMgmt.Application.Repositories;
-using ShopMgmt.Application.Interfaces.Repositories;
 using ShopMgmt.Application.DTOS;
+using ShopMgmt.Application.Interface;
+using ShopMgmt.Application.Interfaces.Repositories;
+using ShopMgmt.Application.Repositories;
 using ShopMgmt.Domain.Entities;
 using ShopMgmt.Domain.Enums;
 
@@ -30,9 +26,8 @@ public class AlertService : IAlertService
         _stockBatchRepository = stockBatchRepository;
     }
 
-    private static AlertDto MapToDto(Alert alert)
-    {
-        return new AlertDto
+    private static AlertDto MapToDto(Alert alert) =>
+        new()
         {
             AlertId = alert.AlertId,
             MaterialId = alert.MaterialId,
@@ -43,9 +38,9 @@ public class AlertService : IAlertService
             ResolvedAt = alert.ResolvedAt,
             ResolvedNote = alert.ResolvedNote,
             Type = alert.Type.ToString(),
-            CreatedByName = alert.User?.Name ?? string.Empty
+            CreatedByName = alert.User?.Name ?? string.Empty,
+            RequestId = alert.RequestId
         };
-    }
 
     public async Task<List<AlertDto>> GetActiveAlertsAsync()
     {
@@ -67,10 +62,9 @@ public class AlertService : IAlertService
 
     public async Task CheckAndCreateLowStockAlertsAsync()
     {
-        const decimal threshold = 10m;
         var rows = await _materialRepository.GetAllWithInventoryAsync();
 
-        foreach (var row in rows.Where(r => r.OnHand < threshold))
+        foreach (var row in rows.Where(r => r.Available < r.Material.MinStock && r.Material.MinStock > 0))
         {
             bool exists = await _alertRepository.ActiveAlertExistsAsync(
                 row.Material.MaterialId, AlertType.LowStock);
@@ -81,8 +75,8 @@ public class AlertService : IAlertService
                 {
                     MaterialId = row.Material.MaterialId,
                     Type = AlertType.LowStock,
-                    Threshold = threshold,
-                    CurrentQuantity = row.OnHand,
+                    Threshold = row.Material.MinStock,
+                    CurrentQuantity = row.Available,
                     TriggeredAt = DateTime.UtcNow,
                     CreatedBy = 1
                 });

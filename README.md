@@ -2,10 +2,19 @@
 
 ## Member 1 — Material Management
 
-### On-hand and stock value
+### Inventory (AMOS-style)
 
-- **On-hand** = sum of `StockBatch.QuantityReceived` − sum of `MaterialUsage.QuantityUsed`
-- **Stock value** = on-hand × `Material.UnitPrice`
+- **On-hand** = (Pending + Serviceable batch qty) − sum of usages (quarantined/condemned excluded from receipt side)
+- **Blocked** = qty in Pending batches (received, not yet serviceable)
+- **Reserved** = qty on requests in `Approved` or `ReadyForPickup`
+- **Available** = Serviceable batch qty − usages − reserved (issue and new requests validate against this)
+- **Stock value** = available × `Material.UnitPrice`
+
+### Material request workflow
+
+`Submitted` → `Approved` (reserves stock) → `ReadyForPickup` (pickup alert) → `Issued` (creates usage with sign-off)
+
+See [DEMO.md](DEMO.md) for demo users and presenter script.
 
 Usage recording is owned by Member 2; this module reads usages for inventory only.
 

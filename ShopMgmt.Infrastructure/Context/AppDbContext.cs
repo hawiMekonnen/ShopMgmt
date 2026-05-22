@@ -18,7 +18,9 @@ public class AppDbContext : DbContext
     public DbSet<StockBatch> StockBatches { get; set; } = null!;
     public DbSet<AuditLog> AuditLogs { get; set; } = null!;
     public DbSet<Alert> Alerts { get; set; } = null!;
-public DbSet<ServiceabilityCheck> ServiceabilityChecks { get; set; } = null!;
+    public DbSet<ServiceabilityCheck> ServiceabilityChecks { get; set; } = null!;
+    public DbSet<MaterialRequest> MaterialRequests { get; set; } = null!;
+    public DbSet<MaterialReturn> MaterialReturns { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -35,14 +37,25 @@ public DbSet<ServiceabilityCheck> ServiceabilityChecks { get; set; } = null!;
         modelBuilder.Entity<Material>(entity =>
         {
             entity.HasKey(m => m.MaterialId);
+            entity.Property(m => m.PartNumber).IsRequired().HasMaxLength(100);
+            entity.HasIndex(m => m.PartNumber).IsUnique();
             entity.Property(m => m.Name).IsRequired().HasMaxLength(200);
+            entity.Property(m => m.Description).HasMaxLength(1000);
+            entity.Property(m => m.AircraftTypes).HasMaxLength(500);
             entity.Property(m => m.Unit).IsRequired().HasMaxLength(50);
             entity.Property(m => m.UnitPrice).HasColumnType("decimal(18,2)");
+            entity.Property(m => m.MinStock).HasColumnType("decimal(18,2)");
+            entity.Property(m => m.ReorderNote).HasMaxLength(500);
 
             entity.HasOne(m => m.Category)
                 .WithMany(c => c.Materials)
                 .HasForeignKey(m => m.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(m => m.DefaultShop)
+                .WithMany()
+                .HasForeignKey(m => m.DefaultShopId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<StockBatch>(entity =>
@@ -50,11 +63,18 @@ public DbSet<ServiceabilityCheck> ServiceabilityChecks { get; set; } = null!;
             entity.HasKey(sb => sb.BatchId);
             entity.Property(sb => sb.QuantityReceived).HasColumnType("decimal(18,2)");
             entity.Property(sb => sb.CostTotal).HasColumnType("decimal(18,2)");
+            entity.Property(sb => sb.Status).HasConversion<string>();
+            entity.HasIndex(sb => sb.Status);
 
             entity.HasOne(sb => sb.Material)
                 .WithMany(m => m.StockBatches)
                 .HasForeignKey(sb => sb.MaterialId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(sb => sb.Shop)
+                .WithMany()
+                .HasForeignKey(sb => sb.ShopId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<MaterialUsage>(entity =>
@@ -66,6 +86,52 @@ public DbSet<ServiceabilityCheck> ServiceabilityChecks { get; set; } = null!;
                 .WithMany(u => u.Usages)
                 .HasForeignKey(mu => mu.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(mu => mu.Request)
+                .WithMany()
+                .HasForeignKey(mu => mu.RequestId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<MaterialRequest>(entity =>
+        {
+            entity.HasKey(r => r.RequestId);
+            entity.Property(r => r.Quantity).HasColumnType("decimal(18,2)");
+            entity.Property(r => r.AircraftOrWorkOrder).HasMaxLength(100);
+            entity.Property(r => r.Status).HasConversion<string>();
+            entity.Property(r => r.Notes).HasMaxLength(500);
+
+            entity.HasOne(r => r.Material)
+                .WithMany(m => m.Requests)
+                .HasForeignKey(r => r.MaterialId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(r => r.Shop)
+                .WithMany()
+                .HasForeignKey(r => r.ShopId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(r => r.RequestedBy)
+                .WithMany()
+                .HasForeignKey(r => r.RequestedByUserId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<MaterialReturn>(entity =>
+        {
+            entity.HasKey(r => r.ReturnId);
+            entity.Property(r => r.Quantity).HasColumnType("decimal(18,2)");
+            entity.Property(r => r.Remarks).IsRequired().HasMaxLength(1000);
+
+            entity.HasOne(r => r.Material)
+                .WithMany()
+                .HasForeignKey(r => r.MaterialId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(r => r.Batch)
+                .WithMany()
+                .HasForeignKey(r => r.BatchId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<AuditLog>(entity =>
@@ -88,6 +154,11 @@ public DbSet<ServiceabilityCheck> ServiceabilityChecks { get; set; } = null!;
                 .WithMany()
                 .HasForeignKey(a => a.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(a => a.Request)
+                .WithMany()
+                .HasForeignKey(a => a.RequestId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<ServiceabilityCheck>(entity =>

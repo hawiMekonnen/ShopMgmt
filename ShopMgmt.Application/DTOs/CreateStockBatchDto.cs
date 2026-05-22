@@ -6,4 +6,5 @@ public class CreateStockBatchDto
     public DateTime ReceivedAt { get; set; }
     public DateTime? ExpiryDate { get; set; }
     public decimal CostTotal { get; set; }
+    public int? ShopId { get; set; }
 }

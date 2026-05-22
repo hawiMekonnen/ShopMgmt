@@ -64,5 +64,11 @@ namespace ShopMgmt.Infrastructure.Repositories
             return await _context.Alerts
                 .AnyAsync(a => a.MaterialId == materialId && a.Type == type && a.ResolvedAt == null);
         }
+
+        public async Task<bool> ActivePickupAlertExistsForRequestAsync(int requestId)
+        {
+            return await _context.Alerts
+                .AnyAsync(a => a.RequestId == requestId && a.Type == AlertType.PickupReady && a.ResolvedAt == null);
+        }
     }
 }

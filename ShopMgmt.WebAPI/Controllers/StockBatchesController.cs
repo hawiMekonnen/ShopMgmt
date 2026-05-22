@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopMgmt.Application.DTOs;
 using ShopMgmt.Application.Interfaces.Services;
@@ -6,6 +7,7 @@ namespace ShopMgmt.WebAPI.Controllers;
 
 [ApiController]
 [Route("api/materials/{materialId:int}/batches")]
+[Authorize]
 public class StockBatchesController : ControllerBase
 {
     private readonly IStockBatchService _stockBatchService;
@@ -17,6 +19,7 @@ public class StockBatchesController : ControllerBase
         => Ok(await _stockBatchService.GetByMaterialIdAsync(materialId, cancellationToken));
 
     [HttpPost]
+    [Authorize(Roles = "ShopManager,Admin")]
     public async Task<ActionResult<StockBatchDto>> Receive(int materialId, [FromBody] CreateStockBatchDto dto, CancellationToken cancellationToken)
     {
         var created = await _stockBatchService.ReceiveAsync(materialId, dto, cancellationToken);
@@ -24,6 +27,7 @@ public class StockBatchesController : ControllerBase
     }
 
     [HttpDelete("{batchId:int}")]
+    [Authorize(Roles = "ShopManager,Admin")]
     public async Task<IActionResult> Delete(int materialId, int batchId, CancellationToken cancellationToken)
     {
         await _stockBatchService.DeleteAsync(materialId, batchId, cancellationToken);

@@ -37,32 +37,48 @@ public class MaterialService : IMaterialService
         _updateValidator = updateValidator;
     }
 
-    public async Task<IReadOnlyList<MaterialListItemDto>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<MaterialListItemDto>> GetAllAsync(int? shopId = null, CancellationToken cancellationToken = default)
     {
-        var rows = await _materialRepository.GetAllWithInventoryAsync(cancellationToken);
+        var rows = await _materialRepository.GetAllWithInventoryAsync(shopId, cancellationToken);
         return _mapper.Map<IReadOnlyList<MaterialListItemDto>>(rows);
     }
 
-    public async Task<MaterialDetailDto> GetByIdAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<MaterialListItemDto>> SearchAsync(
+        string? partNumber,
+        string? aircraft,
+        string? query,
+        int? shopId,
+        CancellationToken cancellationToken = default)
+    {
+        var rows = await _materialRepository.SearchAsync(partNumber, aircraft, query, shopId, cancellationToken);
+        return _mapper.Map<IReadOnlyList<MaterialListItemDto>>(rows);
+    }
+
+    public async Task<MaterialDetailDto> GetByIdAsync(int id, int? shopId = null, CancellationToken cancellationToken = default)
     {
         var material = await _materialRepository.GetByIdAsync(id, cancellationToken)
             ?? throw new NotFoundException($"Material {id} was not found.");
 
-        var inventory = await _materialRepository.GetInventoryAsync(id, cancellationToken)
+        var inventory = await _materialRepository.GetInventoryAsync(id, shopId, cancellationToken)
             ?? throw new NotFoundException($"Material {id} was not found.");
 
         var batches = await _stockBatchRepository.GetByMaterialIdAsync(id, cancellationToken);
 
         var detail = _mapper.Map<MaterialDetailDto>(material);
         detail.OnHand = inventory.OnHand;
+        detail.Blocked = inventory.Blocked;
+        detail.Reserved = inventory.Reserved;
+        detail.Available = inventory.Available;
         detail.StockValue = inventory.StockValue;
+        detail.MinStock = material.MinStock;
+        detail.DefaultShopId = material.DefaultShopId;
         detail.RecentBatches = _mapper.Map<IReadOnlyList<StockBatchDto>>(batches.OrderByDescending(b => b.ReceivedAt).Take(5).ToList());
         return detail;
     }
 
-    public async Task<MaterialInventoryDto> GetInventoryAsync(int id, CancellationToken cancellationToken = default)
+    public async Task<MaterialInventoryDto> GetInventoryAsync(int id, int? shopId = null, CancellationToken cancellationToken = default)
     {
-        var inventory = await _materialRepository.GetInventoryAsync(id, cancellationToken)
+        var inventory = await _materialRepository.GetInventoryAsync(id, shopId, cancellationToken)
             ?? throw new NotFoundException($"Material {id} was not found.");
 
         return _mapper.Map<MaterialInventoryDto>(inventory);
@@ -75,13 +91,17 @@ public class MaterialService : IMaterialService
         if (!await _categoryRepository.ExistsAsync(dto.CategoryId, cancellationToken))
             throw new NotFoundException($"Category {dto.CategoryId} was not found.");
 
+        if (await _materialRepository.PartNumberExistsAsync(dto.PartNumber.Trim(), cancellationToken: cancellationToken))
+            throw new ConflictException($"Part number '{dto.PartNumber}' is already registered.");
+
         var material = _mapper.Map<Material>(dto);
+        material.PartNumber = dto.PartNumber.Trim();
         material.CreatedAt = DateTime.UtcNow;
 
         var created = await _materialRepository.AddAsync(material, cancellationToken);
         await _auditRecorder.RecordAsync("Create", nameof(Material), created.MaterialId, $"Created material '{created.Name}'", cancellationToken);
 
-        return await GetByIdAsync(created.MaterialId, cancellationToken);
+        return await GetByIdAsync(created.MaterialId, dto.DefaultShopId, cancellationToken);
     }
 
     public async Task<MaterialDetailDto> UpdateAsync(int id, UpdateMaterialDto dto, CancellationToken cancellationToken = default)
@@ -94,15 +114,23 @@ public class MaterialService : IMaterialService
         if (!await _categoryRepository.ExistsAsync(dto.CategoryId, cancellationToken))
             throw new NotFoundException($"Category {dto.CategoryId} was not found.");
 
+        if (await _materialRepository.PartNumberExistsAsync(dto.PartNumber.Trim(), id, cancellationToken))
+            throw new ConflictException($"Part number '{dto.PartNumber}' is already registered.");
+
+        material.PartNumber = dto.PartNumber.Trim();
         material.Name = dto.Name;
+        material.Description = dto.Description;
+        material.AircraftTypes = dto.AircraftTypes;
         material.CategoryId = dto.CategoryId;
         material.UnitPrice = dto.UnitPrice;
         material.Unit = dto.Unit;
+        material.MinStock = dto.MinStock;
+        material.DefaultShopId = dto.DefaultShopId;
 
         await _materialRepository.UpdateAsync(material, cancellationToken);
         await _auditRecorder.RecordAsync("Update", nameof(Material), id, $"Updated material '{material.Name}'", cancellationToken);
 
-        return await GetByIdAsync(id, cancellationToken);
+        return await GetByIdAsync(id, dto.DefaultShopId, cancellationToken);
     }
 
     public async Task DeleteAsync(int id, CancellationToken cancellationToken = default)

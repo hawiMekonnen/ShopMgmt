@@ -17,6 +17,9 @@ public static class DependencyInjection
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<IMaterialService, MaterialService>();
         services.AddScoped<IStockBatchService, StockBatchService>();
+        services.AddScoped<IMaterialRequestService, MaterialRequestService>();
+        services.AddScoped<IMaterialReturnService, MaterialReturnService>();
+        services.AddScoped<IProcurementService, ProcurementService>();
 
         return services;
     }

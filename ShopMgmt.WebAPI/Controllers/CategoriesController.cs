@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopMgmt.Application.DTOs;
 using ShopMgmt.Application.Exceptions;
@@ -7,6 +8,7 @@ namespace ShopMgmt.WebAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class CategoriesController : ControllerBase
 {
     private readonly ICategoryService _categoryService;
@@ -22,6 +24,7 @@ public class CategoriesController : ControllerBase
         => Ok(await _categoryService.GetByIdAsync(id, cancellationToken));
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<CategoryDto>> Create([FromBody] CreateCategoryDto dto, CancellationToken cancellationToken)
     {
         var created = await _categoryService.CreateAsync(dto, cancellationToken);
@@ -29,10 +32,12 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<CategoryDto>> Update(int id, [FromBody] UpdateCategoryDto dto, CancellationToken cancellationToken)
         => Ok(await _categoryService.UpdateAsync(id, dto, cancellationToken));
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         await _categoryService.DeleteAsync(id, cancellationToken);

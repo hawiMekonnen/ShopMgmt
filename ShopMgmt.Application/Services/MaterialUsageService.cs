@@ -1,9 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using ShopMgmt.Application.DTOS;
+using ShopMgmt.Application.Exceptions;
 using ShopMgmt.Application.Interface;
+using ShopMgmt.Application.Interfaces.Repositories;
 using ShopMgmt.Application.Repositories;
 using ShopMgmt.Domain.Entities;
 
@@ -12,14 +10,23 @@ namespace ShopMgmt.Application.Services;
 public class MaterialUsageService : IMaterialUsageService
 {
     private readonly IMaterialUsageRepository _usageRepository;
+    private readonly IMaterialRepository _materialRepository;
 
-    public MaterialUsageService(IMaterialUsageRepository usageRepository)
+    public MaterialUsageService(
+        IMaterialUsageRepository usageRepository,
+        IMaterialRepository materialRepository)
     {
         _usageRepository = usageRepository;
+        _materialRepository = materialRepository;
     }
 
     public async Task<MaterialUsageDto> RecordUsageAsync(CreateMaterialUsageDto createUsageDto)
     {
+        await ValidateIssueAsync(
+            createUsageDto.MaterialId,
+            createUsageDto.ShopId,
+            createUsageDto.QuantityUsed);
+
         var usage = new MaterialUsage
         {
             MaterialId = createUsageDto.MaterialId,
@@ -27,15 +34,29 @@ public class MaterialUsageService : IMaterialUsageService
             QuantityUsed = createUsageDto.QuantityUsed,
             UsedAt = DateTime.UtcNow,
             FlightNumber = createUsageDto.FlightNumber,
-            UserId = createUsageDto.UserId
+            UserId = createUsageDto.UserId,
+            RequestId = createUsageDto.RequestId,
+            IssuedByUserId = createUsageDto.IssuedByUserId,
+            CollectedByUserId = createUsageDto.CollectedByUserId
         };
 
         var createdUsage = await _usageRepository.AddAsync(usage);
-        
-        // Let's refetch to get nav properties for the DTO
         var fetchedUsage = await _usageRepository.GetByIdAsync(createdUsage.UsageId);
-
         return MapToDto(fetchedUsage ?? createdUsage);
+    }
+
+    public async Task ValidateIssueAsync(int materialId, int shopId, decimal quantity)
+    {
+        var inventory = await _materialRepository.GetInventoryAsync(materialId, shopId);
+        if (inventory is null)
+            throw new NotFoundException($"Material {materialId} was not found.");
+
+        if (quantity <= 0)
+            throw new ConflictException("Issue quantity must be greater than zero.");
+
+        if (quantity > inventory.Available)
+            throw new ConflictException(
+                $"Insufficient serviceable stock. Available: {inventory.Available}, requested: {quantity}.");
     }
 
     public async Task<List<MaterialUsageDto>> GetUsagesByShopAsync(int shopId)
@@ -48,7 +69,6 @@ public class MaterialUsageService : IMaterialUsageService
     {
         var usage = await _usageRepository.GetByIdAsync(usageId);
         if (usage == null) return null;
-
         return MapToDto(usage);
     }
 
@@ -56,9 +76,12 @@ public class MaterialUsageService : IMaterialUsageService
     {
         var existingUsage = await _usageRepository.GetByIdAsync(usageId);
         if (existingUsage == null)
-        {
-            throw new Exception($"Material usage with ID {usageId} not found.");
-        }
+            throw new NotFoundException($"Material usage with ID {usageId} not found.");
+
+        await ValidateIssueAsync(
+            updateUsageDto.MaterialId,
+            updateUsageDto.ShopId,
+            updateUsageDto.QuantityUsed);
 
         existingUsage.MaterialId = updateUsageDto.MaterialId;
         existingUsage.ShopId = updateUsageDto.ShopId;
@@ -86,7 +109,10 @@ public class MaterialUsageService : IMaterialUsageService
             QuantityUsed = usage.QuantityUsed,
             DateUsed = usage.UsedAt,
             FlightNumber = usage.FlightNumber,
-            UserId = usage.UserId
+            UserId = usage.UserId,
+            RequestId = usage.RequestId,
+            IssuedByUserId = usage.IssuedByUserId,
+            CollectedByUserId = usage.CollectedByUserId
         };
     }
 }

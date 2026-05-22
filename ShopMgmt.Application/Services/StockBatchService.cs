@@ -49,6 +49,7 @@ public class StockBatchService : IStockBatchService
 
         var batch = _mapper.Map<StockBatch>(dto);
         batch.MaterialId = materialId;
+        batch.Status = Domain.Enums.MaterialStatus.Pending;
 
         var created = await _stockBatchRepository.AddAsync(batch, cancellationToken);
         await _auditRecorder.RecordAsync("Receive", nameof(StockBatch), created.BatchId,

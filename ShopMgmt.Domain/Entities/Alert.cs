@@ -15,4 +15,6 @@ public class Alert
     public User User { get; set; } = null!;
     public AlertType Type { get; set; }
     public string? ResolvedNote { get; set; }
+    public int? RequestId { get; set; }
+    public MaterialRequest? Request { get; set; }
 }

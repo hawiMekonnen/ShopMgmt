@@ -3,5 +3,7 @@ namespace ShopMgmt.Domain.Enums;
 public enum AlertType
 {
     LowStock,
-    ExpiryWarning
+    ExpiryWarning,
+    PickupReady,
+    QuarantineReview
 }

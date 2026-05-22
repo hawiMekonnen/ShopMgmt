@@ -13,4 +13,5 @@ public interface IAlertRepository
     Task<Alert> AddAsync(Alert alert);
     Task UpdateAsync(Alert alert);
     Task<bool> ActiveAlertExistsAsync(int materialId, AlertType type);
+    Task<bool> ActivePickupAlertExistsForRequestAsync(int requestId);
 }

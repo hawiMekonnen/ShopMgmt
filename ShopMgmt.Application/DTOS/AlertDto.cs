@@ -12,4 +12,5 @@ public class AlertDto
     public string? ResolvedNote { get; set; }
     public string Type { get; set; } = string.Empty;
     public string CreatedByName { get; set; } = string.Empty;
+    public int? RequestId { get; set; }
 }

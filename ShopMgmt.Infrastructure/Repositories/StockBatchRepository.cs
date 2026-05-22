@@ -45,4 +45,11 @@ public class StockBatchRepository : IStockBatchRepository
             .Where(b => b.ExpiryDate.HasValue && b.ExpiryDate.Value <= cutoffDate)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<StockBatch>> GetQuarantinedAsync(CancellationToken cancellationToken = default)
+        => await _context.StockBatches
+            .Include(b => b.Material)
+            .Where(b => b.Status == Domain.Enums.MaterialStatus.Quarantined)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
 }

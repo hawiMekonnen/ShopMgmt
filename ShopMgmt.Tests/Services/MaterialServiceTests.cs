@@ -7,6 +7,7 @@ using ShopMgmt.Application.Mapping;
 using ShopMgmt.Application.Services;
 using ShopMgmt.Application.Validators;
 using ShopMgmt.Domain.Entities;
+using ShopMgmt.Domain.Enums;
 using ShopMgmt.Infrastructure.Context;
 using ShopMgmt.Infrastructure.Repositories;
 using ShopMgmt.Tests.Infrastructure;
@@ -41,6 +42,7 @@ public class MaterialServiceTests
         var service = CreateService(context);
         var result = await service.CreateAsync(new CreateMaterialDto
         {
+            PartNumber = "PN-001",
             Name = "Grease",
             CategoryId = category.CategoryId,
             UnitPrice = 10m,
@@ -48,11 +50,11 @@ public class MaterialServiceTests
         });
 
         Assert.True(result.CreatedAt <= DateTime.UtcNow);
-        Assert.True(result.CreatedAt > DateTime.UtcNow.AddMinutes(-1));
+        Assert.Equal("PN-001", result.PartNumber);
     }
 
     [Fact]
-    public async Task GetAllAsync_CalculatesOnHandAndStockValue()
+    public async Task GetAllAsync_CalculatesAvailableFromServiceableBatches()
     {
         await using var context = TestDbContextFactory.Create();
         var category = new Category { Name = "Tools" };
@@ -61,6 +63,7 @@ public class MaterialServiceTests
 
         var material = new Material
         {
+            PartNumber = "PN-WRENCH",
             Name = "Wrench",
             CategoryId = category.CategoryId,
             UnitPrice = 5m,
@@ -75,10 +78,11 @@ public class MaterialServiceTests
             MaterialId = material.MaterialId,
             QuantityReceived = 100m,
             ReceivedAt = DateTime.UtcNow,
-            CostTotal = 500m
+            CostTotal = 500m,
+            Status = MaterialStatus.Serviceable
         });
         context.Shops.Add(new Shop { ShopId = 1, Name = "Main", Location = "ADD" });
-        context.Users.Add(new User { UserId = 1, Name = "Test", Email = "t@test.com", Role = Domain.Enums.UserRole.Technician });
+        context.Users.Add(new User { UserId = 1, Name = "Test", Email = "t@test.com", PasswordHash = "x", Role = UserRole.Technician });
         context.MaterialUsages.Add(new MaterialUsage
         {
             MaterialId = material.MaterialId,
@@ -94,6 +98,7 @@ public class MaterialServiceTests
 
         var item = Assert.Single(list);
         Assert.Equal(70m, item.OnHand);
+        Assert.Equal(70m, item.Available);
         Assert.Equal(350m, item.StockValue);
     }
 
@@ -107,6 +112,7 @@ public class MaterialServiceTests
 
         var material = new Material
         {
+            PartNumber = "PN-BOLT",
             Name = "Bolt",
             CategoryId = category.CategoryId,
             UnitPrice = 1m,
@@ -117,7 +123,7 @@ public class MaterialServiceTests
         await context.SaveChangesAsync();
 
         context.Shops.Add(new Shop { ShopId = 1, Name = "Main", Location = "ADD" });
-        context.Users.Add(new User { UserId = 1, Name = "Test", Email = "t@test.com", Role = Domain.Enums.UserRole.Technician });
+        context.Users.Add(new User { UserId = 1, Name = "Test", Email = "t@test.com", PasswordHash = "x", Role = UserRole.Technician });
         context.MaterialUsages.Add(new MaterialUsage
         {
             MaterialId = material.MaterialId,

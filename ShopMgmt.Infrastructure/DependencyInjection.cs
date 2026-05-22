@@ -25,8 +25,9 @@ public static class DependencyInjection
         services.AddScoped<IMaterialRepository, MaterialRepository>();
         services.AddScoped<IStockBatchRepository, StockBatchRepository>();
         services.AddScoped<IServiceabilityCheckRepository, ServiceabilityCheckRepository>();
-        services.AddScoped<IServiceabilityCheckService, ServiceabilityCheckService>();
-        services.AddScoped<IAuditRecorder, NoOpAuditRecorder>();
+        services.AddScoped<IMaterialRequestRepository, MaterialRequestRepository>();
+        services.AddScoped<IMaterialReturnRepository, MaterialReturnRepository>();
+        services.AddScoped<IAuditRecorder, DbAuditRecorder>();
 
         return services;
     }
