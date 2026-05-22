@@ -37,7 +37,6 @@ public class ServiceabilityCheckServiceTests
         {
             MaterialId = material.MaterialId,
             QuantityReceived = 10m,
-            QuantityRemaining = 10m,
             CostTotal = 5000m,
             ReceivedAt = DateTime.UtcNow,
             Status = MaterialStatus.Pending
@@ -101,7 +100,6 @@ public class ServiceabilityCheckServiceTests
         {
             MaterialId = material.MaterialId,
             QuantityReceived = 10m,
-            QuantityRemaining = 10m,
             CostTotal = 5000m,
             ReceivedAt = DateTime.UtcNow,
             Status = MaterialStatus.Pending
