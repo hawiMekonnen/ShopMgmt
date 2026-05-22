@@ -43,6 +43,7 @@ public class AuditLogService : IAuditLogService
             Entity = l.Entity,
             EntityId = l.EntityId,
             PerformedBy = l.PerformedBy,
+            PerformedByName = l.User?.Name ?? string.Empty,
             Timestamp = l.Timestamp,
             Details = l.Details
         }).ToList();
@@ -52,7 +53,8 @@ public class AuditLogService : IAuditLogService
             Items = items,
             TotalCount = totalCount,
             Page = page,
-            PageSize = pageSize
+            PageSize = pageSize,
+            TotalPages = pageSize > 0 ? (int)Math.Ceiling(totalCount / (double)pageSize) : 0
         };
     }
 }

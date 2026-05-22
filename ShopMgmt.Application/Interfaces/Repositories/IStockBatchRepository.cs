@@ -8,5 +8,5 @@ public interface IStockBatchRepository
     Task<StockBatch?> GetByIdAsync(int batchId, CancellationToken cancellationToken = default);
     Task<StockBatch> AddAsync(StockBatch batch, CancellationToken cancellationToken = default);
     Task DeleteAsync(StockBatch batch, CancellationToken cancellationToken = default);
-    Task UpdateAsync(StockBatch batch, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<StockBatch>> GetExpiringBeforeAsync(DateTime cutoffDate, CancellationToken cancellationToken = default);
 }
