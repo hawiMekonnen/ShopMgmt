@@ -24,7 +24,10 @@ public class MaterialMappingProfile : Profile
             .ForMember(d => d.CategoryId, opt => opt.MapFrom(s => s.Material.CategoryId))
             .ForMember(d => d.Unit, opt => opt.MapFrom(s => s.Material.Unit))
             .ForMember(d => d.UnitPrice, opt => opt.MapFrom(s => s.Material.UnitPrice))
-            .ForMember(d => d.MinStock, opt => opt.MapFrom(s => s.Material.MinStock));
+            .ForMember(d => d.MinStock, opt => opt.MapFrom(s => s.Material.MinStock))
+            .ForMember(d => d.DefaultShopId, opt => opt.MapFrom(s => s.Material.DefaultShopId))
+            .ForMember(d => d.ReorderPlaced, opt => opt.MapFrom(s => s.Material.ReorderPlaced))
+            .ForMember(d => d.ReorderNote, opt => opt.MapFrom(s => s.Material.ReorderNote));
 
         CreateMap<Material, MaterialDetailDto>()
             .ForMember(d => d.CategoryName, opt => opt.MapFrom(s => s.Category.Name))

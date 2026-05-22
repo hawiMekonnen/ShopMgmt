@@ -6,13 +6,13 @@
 
 - **On-hand** = (Pending + Serviceable batch qty) − sum of usages (quarantined/condemned excluded from receipt side)
 - **Blocked** = qty in Pending batches (received, not yet serviceable)
-- **Reserved** = qty on requests in `Approved` or `ReadyForPickup`
+- **Reserved** = qty on requests in `ReadyForPickup` (and legacy `Approved`)
 - **Available** = Serviceable batch qty − usages − reserved (issue and new requests validate against this)
 - **Stock value** = available × `Material.UnitPrice`
 
 ### Material request workflow
 
-`Submitted` → `Approved` (reserves stock) → `ReadyForPickup` (pickup alert) → `Issued` (creates usage with sign-off)
+`Submitted` → `ReadyForPickup` via **Release for issue** (reserves stock + pickup alert) → `Issued` (creates usage with sign-off). Work order required on submit.
 
 See [DEMO.md](DEMO.md) for demo users and presenter script.
 

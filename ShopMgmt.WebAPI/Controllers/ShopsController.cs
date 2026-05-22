@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopMgmt.Application.DTOS;
 using ShopMgmt.Application.Interface;
@@ -9,6 +10,7 @@ namespace ShopMgmt.WebAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class ShopsController : ControllerBase
 {
     private readonly IShopService _shopService;
@@ -19,6 +21,7 @@ public class ShopsController : ControllerBase
     }
 
     [HttpGet]
+    [Authorize(Roles = "Admin,ShopManager,Procurement")]
     public async Task<ActionResult<List<ShopDto>>> GetAllShops()
     {
         var shops = await _shopService.GetAllShopsAsync();
@@ -36,6 +39,7 @@ public class ShopsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<ShopDto>> CreateShop([FromBody] CreateShopDto createShopDto)
     {
         var createdShop = await _shopService.CreateShopAsync(createShopDto);
@@ -43,6 +47,7 @@ public class ShopsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> UpdateShop(int id, [FromBody] UpdateShopDto updateShopDto)
     {
         try
@@ -59,6 +64,7 @@ public class ShopsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteShop(int id)
     {
         await _shopService.DeleteShopAsync(id);

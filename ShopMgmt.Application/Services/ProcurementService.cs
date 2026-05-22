@@ -22,11 +22,13 @@ public class ProcurementService : IProcurementService
         _requestRepository = requestRepository;
     }
 
-    public async Task<IReadOnlyList<ProcurementActionDto>> GetActionsAsync(CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<ProcurementActionDto>> GetActionsAsync(
+        int? shopId = null,
+        CancellationToken cancellationToken = default)
     {
         var actions = new List<ProcurementActionDto>();
 
-        var rows = await _materialRepository.GetAllWithInventoryAsync(cancellationToken: cancellationToken);
+        var rows = await _materialRepository.GetAllWithInventoryAsync(shopId, cancellationToken);
         foreach (var row in rows.Where(r => r.Available < r.Material.MinStock && r.Material.MinStock > 0))
         {
             actions.Add(new ProcurementActionDto
@@ -43,6 +45,9 @@ public class ProcurementService : IProcurementService
         }
 
         var quarantined = await _stockBatchRepository.GetQuarantinedAsync(cancellationToken);
+        if (shopId.HasValue)
+            quarantined = quarantined.Where(b => b.ShopId == null || b.ShopId == shopId.Value).ToList();
+
         foreach (var batch in quarantined)
         {
             actions.Add(new ProcurementActionDto
@@ -59,7 +64,7 @@ public class ProcurementService : IProcurementService
             });
         }
 
-        var openRequests = await _requestRepository.ListAsync(null, null, null, cancellationToken);
+        var openRequests = await _requestRepository.ListAsync(shopId, null, null, cancellationToken);
         foreach (var req in openRequests.Where(r =>
                      r.Status == RequestStatus.Submitted || r.Status == RequestStatus.Approved))
         {

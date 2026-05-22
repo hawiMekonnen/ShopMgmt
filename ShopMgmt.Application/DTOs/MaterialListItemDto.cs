@@ -17,4 +17,7 @@ public class MaterialListItemDto
     public decimal Reserved { get; set; }
     public decimal Available { get; set; }
     public decimal StockValue { get; set; }
+    public int? DefaultShopId { get; set; }
+    public bool ReorderPlaced { get; set; }
+    public string? ReorderNote { get; set; }
 }

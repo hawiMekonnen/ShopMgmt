@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopMgmt.Application.DTOs;
 using ShopMgmt.Application.Interfaces.Services;
+using ShopMgmt.WebAPI.Authorization;
 
 namespace ShopMgmt.WebAPI.Controllers;
 
@@ -15,33 +16,49 @@ public class MaterialsController : ControllerBase
     public MaterialsController(IMaterialService materialService) => _materialService = materialService;
 
     [HttpGet]
+    [Authorize(Roles = "Admin,ShopManager,Procurement")]
     public async Task<ActionResult<IReadOnlyList<MaterialListItemDto>>> GetAll(
         [FromQuery] int? shopId,
         CancellationToken cancellationToken)
-        => Ok(await _materialService.GetAllAsync(shopId, cancellationToken));
+    {
+        var scopedShopId = ShopScopeHelper.ResolveShopId(User, shopId);
+        return Ok(await _materialService.GetAllAsync(scopedShopId, cancellationToken));
+    }
 
     [HttpGet("search")]
+    [Authorize(Roles = "Technician,ShopManager,Admin")]
     public async Task<ActionResult<IReadOnlyList<MaterialListItemDto>>> Search(
         [FromQuery] string? partNumber,
         [FromQuery] string? aircraft,
         [FromQuery] string? q,
         [FromQuery] int? shopId,
         CancellationToken cancellationToken)
-        => Ok(await _materialService.SearchAsync(partNumber, aircraft, q, shopId, cancellationToken));
+    {
+        var scopedShopId = ShopScopeHelper.ResolveShopId(User, shopId);
+        return Ok(await _materialService.SearchAsync(partNumber, aircraft, q, scopedShopId, cancellationToken));
+    }
 
     [HttpGet("{id:int}")]
+    [Authorize(Roles = "Admin,ShopManager,Procurement")]
     public async Task<ActionResult<MaterialDetailDto>> GetById(
         int id,
         [FromQuery] int? shopId,
         CancellationToken cancellationToken)
-        => Ok(await _materialService.GetByIdAsync(id, shopId, cancellationToken));
+    {
+        var scopedShopId = ShopScopeHelper.ResolveShopId(User, shopId);
+        return Ok(await _materialService.GetByIdAsync(id, scopedShopId, cancellationToken));
+    }
 
     [HttpGet("{id:int}/inventory")]
+    [Authorize(Roles = "Admin,ShopManager,Procurement")]
     public async Task<ActionResult<MaterialInventoryDto>> GetInventory(
         int id,
         [FromQuery] int? shopId,
         CancellationToken cancellationToken)
-        => Ok(await _materialService.GetInventoryAsync(id, shopId, cancellationToken));
+    {
+        var scopedShopId = ShopScopeHelper.ResolveShopId(User, shopId);
+        return Ok(await _materialService.GetInventoryAsync(id, scopedShopId, cancellationToken));
+    }
 
     [HttpPost]
     [Authorize(Roles = "ShopManager,Admin")]

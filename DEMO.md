@@ -39,8 +39,8 @@ Each user sees a **different sidebar** and **home screen**:
 | Role | Home screen | Main menu items |
 |------|-------------|-----------------|
 | **Technician** | Search & Request | Search & Request, Request queue, Alerts (pickup only) |
-| **ShopManager** | Request queue | Request queue, Materials & stock, Alerts, Search (optional) |
-| **Procurement** | Procurement inbox | Procurement inbox, Alerts |
+| **ShopManager** | Request queue | Request queue, My shop stock (per-shop qty), Alerts, Search (optional) |
+| **Procurement** | Procurement inbox | Stock by shop, Procurement inbox, Alerts |
 | **Admin** | Dashboard | All items including Categories (admin) |
 | **Finance** | Dashboard | Dashboard only (read-only ops) |
 
@@ -51,18 +51,18 @@ Use the quick-login tiles on the sign-in page to switch roles during the demo.
 1. **Technician** (`technician@demo.et`) — **Search & Request**
    - Open **Search & Request**
    - Search part `ET-AVN-WIRE` — show **Available** vs **On hand** (pending batches blocked)
-   - Click **Request** for 1 spool, WO `ET-AUE`
+   - Click **Request** for 1 spool — **work order required** (e.g. `ET-AUE / WO-4401`)
 
-2. **Shop manager** (`shopmanager@demo.et`) — **Approve → Ready**
-   - **Requests** — approve new request
-   - **Mark ready** — creates **PickupReady** alert
+2. **Shop manager** (`shopmanager@demo.et`) — **Release for issue**
+   - **Requests** — **Release for issue** on submitted request (reserves stock + **PickupReady** alert in one step)
 
 3. **Technician** — **Pickup**
    - **Requests** — **Confirm pickup** on `ReadyForPickup` row (pre-seeded request also works)
    - Stock issues with sign-off fields on usage
 
-4. **Procurement** (`procurement@demo.et`) — **Inbox**
-   - **Procurement** — low stock, quarantine, open requests
+4. **Procurement** (`procurement@demo.et`) — **Stock & inbox**
+   - **Stock by shop** — on hand, available, min, **on order** (reorder flag)
+   - **Procurement inbox** — low stock, quarantine, open requests (filter by shop)
    - **Mark reorder** on a line
 
 5. **Optional** — Receive → Serviceability (API or existing material flows)
@@ -81,7 +81,7 @@ Use the quick-login tiles on the sign-in page to switch roles during the demo.
 |------|--------|
 | Search | `GET /api/materials/search?partNumber=&aircraft=&shopId=` |
 | Submit request | `POST /api/materialrequests` |
-| Approve / Ready / Issue | `PATCH /api/materialrequests/{id}/approve|ready|issue` |
+| Release / Issue | `PATCH /api/materialrequests/{id}/release` · `.../issue` |
 | Defect return | `POST /api/materialreturns` |
 | Procurement | `GET /api/procurement/actions` |
 

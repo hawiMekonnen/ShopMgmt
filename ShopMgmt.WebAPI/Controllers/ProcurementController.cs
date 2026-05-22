@@ -15,8 +15,10 @@ public class ProcurementController : ControllerBase
     public ProcurementController(IProcurementService procurementService) => _procurementService = procurementService;
 
     [HttpGet("actions")]
-    public async Task<ActionResult<IReadOnlyList<ProcurementActionDto>>> GetActions(CancellationToken cancellationToken)
-        => Ok(await _procurementService.GetActionsAsync(cancellationToken));
+    public async Task<ActionResult<IReadOnlyList<ProcurementActionDto>>> GetActions(
+        [FromQuery] int? shopId,
+        CancellationToken cancellationToken)
+        => Ok(await _procurementService.GetActionsAsync(shopId, cancellationToken));
 
     [HttpPatch("materials/{materialId:int}/reorder")]
     public async Task<IActionResult> MarkReorder(

@@ -39,15 +39,10 @@ public class MaterialRequestsController : ControllerBase
         return CreatedAtAction(nameof(GetById), new { id = created.RequestId }, created);
     }
 
-    [HttpPatch("{id:int}/approve")]
+    [HttpPatch("{id:int}/release")]
     [Authorize(Roles = "ShopManager,Admin")]
-    public async Task<ActionResult<MaterialRequestDto>> Approve(int id, CancellationToken cancellationToken)
-        => Ok(await _requestService.ApproveAsync(id, cancellationToken));
-
-    [HttpPatch("{id:int}/ready")]
-    [Authorize(Roles = "ShopManager,Admin")]
-    public async Task<ActionResult<MaterialRequestDto>> MarkReady(int id, CancellationToken cancellationToken)
-        => Ok(await _requestService.MarkReadyAsync(id, cancellationToken));
+    public async Task<ActionResult<MaterialRequestDto>> ReleaseForIssue(int id, CancellationToken cancellationToken)
+        => Ok(await _requestService.ReleaseForIssueAsync(id, cancellationToken));
 
     [HttpPatch("{id:int}/issue")]
     [Authorize(Roles = "ShopManager,Technician,Admin")]

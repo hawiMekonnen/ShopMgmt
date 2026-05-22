@@ -47,13 +47,17 @@ public class MaterialRequestService : IMaterialRequestService
             throw new ConflictException(
                 $"Insufficient available stock. Available: {inventory.Available}, requested: {dto.Quantity}.");
 
+        var workOrder = dto.AircraftOrWorkOrder?.Trim();
+        if (string.IsNullOrWhiteSpace(workOrder))
+            throw new ConflictException("Work order is required.");
+
         var request = new MaterialRequest
         {
             MaterialId = dto.MaterialId,
             ShopId = dto.ShopId,
             RequestedByUserId = requestedByUserId,
             Quantity = dto.Quantity,
-            AircraftOrWorkOrder = dto.AircraftOrWorkOrder,
+            AircraftOrWorkOrder = workOrder,
             Notes = dto.Notes,
             Status = RequestStatus.Submitted,
             CreatedAt = DateTime.UtcNow
@@ -80,43 +84,50 @@ public class MaterialRequestService : IMaterialRequestService
         return MapToDto(request);
     }
 
-    public async Task<MaterialRequestDto> ApproveAsync(int requestId, CancellationToken cancellationToken = default)
+    public async Task<MaterialRequestDto> ReleaseForIssueAsync(int requestId, CancellationToken cancellationToken = default)
     {
-        var request = await GetRequestForTransitionAsync(requestId, RequestStatus.Submitted, cancellationToken);
+        var request = await _requestRepository.GetByIdAsync(requestId, cancellationToken)
+            ?? throw new NotFoundException($"Request {requestId} was not found.");
 
-        var inventory = await _materialRepository.GetInventoryAsync(request.MaterialId, request.ShopId, cancellationToken);
-        if (inventory is null || request.Quantity > inventory.Available)
-            throw new ConflictException("Cannot approve: insufficient available stock.");
+        if (request.Status is RequestStatus.ReadyForPickup or RequestStatus.Issued or RequestStatus.Cancelled)
+            throw new ConflictException($"Request cannot be released in status {request.Status}.");
 
-        request.Status = RequestStatus.Approved;
-        request.ApprovedAt = DateTime.UtcNow;
+        if (request.Status == RequestStatus.Submitted)
+        {
+            var inventory = await _materialRepository.GetInventoryAsync(request.MaterialId, request.ShopId, cancellationToken);
+            if (inventory is null || request.Quantity > inventory.Available)
+                throw new ConflictException("Cannot release: insufficient available stock.");
+        }
+        else if (request.Status != RequestStatus.Approved)
+        {
+            throw new ConflictException($"Request must be submitted to release. Current: {request.Status}.");
+        }
+
+        var now = DateTime.UtcNow;
+        request.Status = RequestStatus.ReadyForPickup;
+        request.ApprovedAt ??= now;
+        request.ReadyAt = now;
         await _requestRepository.UpdateAsync(request, cancellationToken);
+        await EnsurePickupReadyAlertAsync(request, cancellationToken);
+
         return MapToDto((await _requestRepository.GetByIdAsync(requestId, cancellationToken))!);
     }
 
-    public async Task<MaterialRequestDto> MarkReadyAsync(int requestId, CancellationToken cancellationToken = default)
+    private async Task EnsurePickupReadyAlertAsync(MaterialRequest request, CancellationToken cancellationToken)
     {
-        var request = await GetRequestForTransitionAsync(requestId, RequestStatus.Approved, cancellationToken);
-        request.Status = RequestStatus.ReadyForPickup;
-        request.ReadyAt = DateTime.UtcNow;
-        await _requestRepository.UpdateAsync(request, cancellationToken);
-
         var exists = await _alertRepository.ActivePickupAlertExistsForRequestAsync(request.RequestId);
-        if (!exists)
-        {
-            await _alertRepository.AddAsync(new Alert
-            {
-                MaterialId = request.MaterialId,
-                Type = AlertType.PickupReady,
-                Threshold = 0,
-                CurrentQuantity = request.Quantity,
-                TriggeredAt = DateTime.UtcNow,
-                CreatedBy = request.RequestedByUserId,
-                RequestId = request.RequestId
-            });
-        }
+        if (exists) return;
 
-        return MapToDto((await _requestRepository.GetByIdAsync(requestId, cancellationToken))!);
+        await _alertRepository.AddAsync(new Alert
+        {
+            MaterialId = request.MaterialId,
+            Type = AlertType.PickupReady,
+            Threshold = 0,
+            CurrentQuantity = request.Quantity,
+            TriggeredAt = DateTime.UtcNow,
+            CreatedBy = request.RequestedByUserId,
+            RequestId = request.RequestId
+        });
     }
 
     public async Task<MaterialRequestDto> IssueAsync(
