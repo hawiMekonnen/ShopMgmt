@@ -24,8 +24,7 @@ public class ShopService : IShopService
         return shops.Select(s => new ShopDto
         {
             ShopId = s.ShopId,
-            Name = s.Name,
-            Location = s.Location
+            Name = s.Name
         }).ToList();
     }
 
@@ -37,8 +36,7 @@ public class ShopService : IShopService
         return new ShopDto
         {
             ShopId = shop.ShopId,
-            Name = shop.Name,
-            Location = shop.Location
+            Name = shop.Name
         };
     }
 
@@ -46,8 +44,7 @@ public class ShopService : IShopService
     {
         var shop = new Shop
         {
-            Name = createShopDto.Name,
-            Location = createShopDto.Location
+            Name = createShopDto.Name
         };
 
         var createdShop = await _shopRepository.AddAsync(shop);
@@ -55,8 +52,7 @@ public class ShopService : IShopService
         return new ShopDto
         {
             ShopId = createdShop.ShopId,
-            Name = createdShop.Name,
-            Location = createdShop.Location
+            Name = createdShop.Name
         };
     }
 
@@ -69,7 +65,6 @@ public class ShopService : IShopService
         }
 
         existingShop.Name = updateShopDto.Name;
-        existingShop.Location = updateShopDto.Location;
 
         await _shopRepository.UpdateAsync(existingShop);
     }

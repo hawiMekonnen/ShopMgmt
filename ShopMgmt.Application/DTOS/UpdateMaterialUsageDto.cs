@@ -14,7 +14,7 @@ public class UpdateMaterialUsageDto
     [Range(0.01, double.MaxValue, ErrorMessage = "Quantity used must be greater than zero.")]
     public decimal QuantityUsed { get; set; }
     
-    public string? FlightNumber { get; set; }
+    public string? TailNumber { get; set; }
     
     [Required]
     public int UserId { get; set; }

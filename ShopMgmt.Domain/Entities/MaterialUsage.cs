@@ -9,7 +9,7 @@ public class MaterialUsage
     public Shop Shop { get; set; } = null!;
     public decimal QuantityUsed { get; set; }
     public DateTime UsedAt { get; set; }
-    public string? FlightNumber { get; set; }
+    public string? TailNumber { get; set; }
     public int UserId { get; set; }
     public User User { get; set; } = null!;
 }

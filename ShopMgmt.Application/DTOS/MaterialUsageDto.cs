@@ -11,6 +11,6 @@ public class MaterialUsageDto
     public string ShopName { get; set; } = string.Empty;
     public decimal QuantityUsed { get; set; }
     public DateTime DateUsed { get; set; }
-    public string? FlightNumber { get; set; }
+    public string? TailNumber { get; set; }
     public int UserId { get; set; }
 }

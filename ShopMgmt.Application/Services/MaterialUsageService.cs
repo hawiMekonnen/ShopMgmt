@@ -26,7 +26,7 @@ public class MaterialUsageService : IMaterialUsageService
             ShopId = createUsageDto.ShopId,
             QuantityUsed = createUsageDto.QuantityUsed,
             UsedAt = DateTime.UtcNow,
-            FlightNumber = createUsageDto.FlightNumber,
+            TailNumber = createUsageDto.TailNumber,
             UserId = createUsageDto.UserId
         };
 
@@ -63,7 +63,7 @@ public class MaterialUsageService : IMaterialUsageService
         existingUsage.MaterialId = updateUsageDto.MaterialId;
         existingUsage.ShopId = updateUsageDto.ShopId;
         existingUsage.QuantityUsed = updateUsageDto.QuantityUsed;
-        existingUsage.FlightNumber = updateUsageDto.FlightNumber;
+        existingUsage.TailNumber = updateUsageDto.TailNumber;
         existingUsage.UserId = updateUsageDto.UserId;
 
         await _usageRepository.UpdateAsync(existingUsage);
@@ -85,7 +85,7 @@ public class MaterialUsageService : IMaterialUsageService
             ShopName = usage.Shop?.Name ?? string.Empty,
             QuantityUsed = usage.QuantityUsed,
             DateUsed = usage.UsedAt,
-            FlightNumber = usage.FlightNumber,
+            TailNumber = usage.TailNumber,
             UserId = usage.UserId
         };
     }
