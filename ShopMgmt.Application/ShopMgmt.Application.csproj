@@ -16,7 +16,6 @@
 
   <ItemGroup>
     <Folder Include="DTOS\" />
-    <Folder Include="Interface\" />
     <Folder Include="Mappers\" />
     <Folder Include="Services\" />
   </ItemGroup>

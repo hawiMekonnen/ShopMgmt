@@ -1,9 +1,7 @@
 using ShopMgmt.Application.DTOs;
 using ShopMgmt.Application.Exceptions;
-using ShopMgmt.Application.Interface;
 using ShopMgmt.Application.Interfaces.Repositories;
 using ShopMgmt.Application.Interfaces.Services;
-using ShopMgmt.Application.Repositories;
 using ShopMgmt.Domain.Entities;
 using ShopMgmt.Domain.Enums;
 
@@ -103,6 +101,7 @@ public class MaterialRequestService : IMaterialRequestService
             throw new ConflictException($"Request must be submitted to release. Current: {request.Status}.");
         }
 
+
         var now = DateTime.UtcNow;
         request.Status = RequestStatus.ReadyForPickup;
         request.ApprovedAt ??= now;
@@ -143,7 +142,7 @@ public class MaterialRequestService : IMaterialRequestService
             MaterialId = request.MaterialId,
             ShopId = request.ShopId,
             QuantityUsed = request.Quantity,
-            FlightNumber = dto.FlightNumber ?? request.AircraftOrWorkOrder,
+
             UserId = request.RequestedByUserId,
             RequestId = request.RequestId,
             IssuedByUserId = issuedByUserId,

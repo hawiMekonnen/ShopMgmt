@@ -310,9 +310,6 @@ namespace ShopMgmt.Infrastructure.Migrations
                     b.Property<int?>("CollectedByUserId")
                         .HasColumnType("int");
 
-                    b.Property<string>("FlightNumber")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int?>("IssuedByUserId")
                         .HasColumnType("int");
 

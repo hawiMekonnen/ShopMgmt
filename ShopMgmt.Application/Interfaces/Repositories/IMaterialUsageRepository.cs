@@ -2,7 +2,7 @@ using ShopMgmt.Domain.Entities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace ShopMgmt.Application.Repositories;
+namespace ShopMgmt.Application.Interfaces.Repositories;
 
 public interface IMaterialUsageRepository
 {

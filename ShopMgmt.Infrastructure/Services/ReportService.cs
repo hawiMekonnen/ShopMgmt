@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
-using ShopMgmt.Application.Interface;
+using ShopMgmt.Application.Interfaces.Services;
 using ShopMgmt.Infrastructure.Context;
 
 namespace ShopMgmt.Infrastructure.Services;
@@ -125,7 +125,7 @@ public class ReportService : IReportService
                         h.Cell().Text("Material").Bold();
                         h.Cell().Text("Shop").Bold();
                         h.Cell().Text("Qty Used").Bold();
-                        h.Cell().Text("Flight No.").Bold();
+                        h.Cell().Text("Tail No.").Bold();
                     });
 
                     foreach (var u in usages)
@@ -134,7 +134,7 @@ public class ReportService : IReportService
                         table.Cell().Text(u.Material?.Name ?? "-");
                         table.Cell().Text(u.Shop?.Name ?? "-");
                         table.Cell().Text(u.QuantityUsed.ToString("F2"));
-                        table.Cell().Text(u.FlightNumber ?? "-");
+                        table.Cell().Text(u.TailNumber ?? "-");
                     }
                 });
 

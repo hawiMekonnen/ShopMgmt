@@ -34,7 +34,7 @@ public class CreateMaterialRequestDto
 public class IssueMaterialRequestDto
 {
     public int CollectedByUserId { get; set; }
-    public string? FlightNumber { get; set; }
+
 }
 
 public class CancelMaterialRequestDto

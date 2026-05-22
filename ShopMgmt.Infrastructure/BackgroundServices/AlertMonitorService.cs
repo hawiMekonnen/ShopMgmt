@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using ShopMgmt.Application.Interface;
+using ShopMgmt.Application.Interfaces.Services;
 
 namespace ShopMgmt.Infrastructure.BackgroundServices
 {

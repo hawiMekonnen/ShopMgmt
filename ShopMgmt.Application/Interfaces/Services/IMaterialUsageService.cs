@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using ShopMgmt.Application.DTOS;
 
-namespace ShopMgmt.Application.Interface;
+namespace ShopMgmt.Application.Interfaces.Services;
 
 public interface IMaterialUsageService
 {

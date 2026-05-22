@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopMgmt.Application.DTOS;
-using ShopMgmt.Application.Interface;
+using ShopMgmt.Application.Interfaces.Services;
 
 namespace ShopMgmt.WebAPI.Controllers;
 

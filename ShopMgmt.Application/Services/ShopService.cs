@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ShopMgmt.Application.DTOS;
-using ShopMgmt.Application.Interface;
-using ShopMgmt.Application.Repositories;
+using ShopMgmt.Application.Interfaces.Repositories;
+using ShopMgmt.Application.Interfaces.Services;
 using ShopMgmt.Domain.Entities;
 
 namespace ShopMgmt.Application.Services;

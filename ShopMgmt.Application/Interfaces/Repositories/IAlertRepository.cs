@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using ShopMgmt.Domain.Entities;
 using ShopMgmt.Domain.Enums;
 
-namespace ShopMgmt.Application.Repositories;
+namespace ShopMgmt.Application.Interfaces.Repositories;
 
 public interface IAlertRepository
 {

@@ -6,4 +6,5 @@ public class Shop
     public string Name { get; set; } = string.Empty;
 
     public ICollection<MaterialUsage> Usages { get; set; } = new List<MaterialUsage>();
+   
 }

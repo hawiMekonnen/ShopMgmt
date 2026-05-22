@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using ShopMgmt.Application.Interface;
-using ShopMgmt.Application.Repositories;
 using ShopMgmt.Application.Services;
 using ShopMgmt.Infrastructure.Repositories;
 using ShopMgmt.Infrastructure.Services;

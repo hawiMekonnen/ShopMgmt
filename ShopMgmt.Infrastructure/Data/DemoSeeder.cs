@@ -31,8 +31,8 @@ public static class DemoSeeder
 
         logger.LogInformation("Seeding AMOS-style demo data...");
 
-        var radioShop = new Shop { Name = "Radio Shop", Location = "ADD-Bole Hangar 3" };
-        var lineShop = new Shop { Name = "Line Maintenance Store", Location = "ADD-Line" };
+        var radioShop = new Shop { Name = "Radio Shop" };
+        var lineShop = new Shop { Name = "Line Maintenance Store" };
         context.Shops.AddRange(radioShop, lineShop);
         await context.SaveChangesAsync();
 

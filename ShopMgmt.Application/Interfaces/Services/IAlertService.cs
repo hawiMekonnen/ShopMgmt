@@ -2,7 +2,7 @@ using ShopMgmt.Application.DTOS;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace ShopMgmt.Application.Interface;
+namespace ShopMgmt.Application.Interfaces.Services;
 
 public interface IAlertService
 {

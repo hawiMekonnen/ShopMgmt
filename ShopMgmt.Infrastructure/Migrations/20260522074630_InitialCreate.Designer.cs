@@ -12,8 +12,8 @@ using ShopMgmt.Infrastructure.Context;
 namespace ShopMgmt.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260522043246_AddAmosBusinessLogic")]
-    partial class AddAmosBusinessLogic
+    [Migration("20260522074630_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -313,9 +313,6 @@ namespace ShopMgmt.Infrastructure.Migrations
                     b.Property<int?>("CollectedByUserId")
                         .HasColumnType("int");
 
-                    b.Property<string>("FlightNumber")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int?>("IssuedByUserId")
                         .HasColumnType("int");
 
@@ -330,6 +327,9 @@ namespace ShopMgmt.Infrastructure.Migrations
 
                     b.Property<int>("ShopId")
                         .HasColumnType("int");
+
+                    b.Property<string>("TailNumber")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UsedAt")
                         .HasColumnType("datetime2");
@@ -392,10 +392,6 @@ namespace ShopMgmt.Infrastructure.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShopId"));
-
-                    b.Property<string>("Location")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()

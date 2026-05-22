@@ -1,8 +1,7 @@
 using ShopMgmt.Application.DTOS;
 using ShopMgmt.Application.Exceptions;
-using ShopMgmt.Application.Interface;
 using ShopMgmt.Application.Interfaces.Repositories;
-using ShopMgmt.Application.Repositories;
+using ShopMgmt.Application.Interfaces.Services;
 using ShopMgmt.Domain.Entities;
 
 namespace ShopMgmt.Application.Services;
@@ -33,7 +32,7 @@ public class MaterialUsageService : IMaterialUsageService
             ShopId = createUsageDto.ShopId,
             QuantityUsed = createUsageDto.QuantityUsed,
             UsedAt = DateTime.UtcNow,
-            FlightNumber = createUsageDto.FlightNumber,
+            TailNumber = createUsageDto.TailNumber,
             UserId = createUsageDto.UserId,
             RequestId = createUsageDto.RequestId,
             IssuedByUserId = createUsageDto.IssuedByUserId,
@@ -108,7 +107,7 @@ public class MaterialUsageService : IMaterialUsageService
             ShopName = usage.Shop?.Name ?? string.Empty,
             QuantityUsed = usage.QuantityUsed,
             DateUsed = usage.UsedAt,
-            FlightNumber = usage.FlightNumber,
+            TailNumber = usage.TailNumber,
             UserId = usage.UserId,
             RequestId = usage.RequestId,
             IssuedByUserId = usage.IssuedByUserId,

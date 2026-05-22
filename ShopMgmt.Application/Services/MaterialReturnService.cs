@@ -2,7 +2,6 @@ using ShopMgmt.Application.DTOs;
 using ShopMgmt.Application.Exceptions;
 using ShopMgmt.Application.Interfaces.Repositories;
 using ShopMgmt.Application.Interfaces.Services;
-using ShopMgmt.Application.Repositories;
 using ShopMgmt.Domain.Entities;
 using ShopMgmt.Domain.Enums;
 

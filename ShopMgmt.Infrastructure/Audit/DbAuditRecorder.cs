@@ -1,5 +1,5 @@
 using ShopMgmt.Application.Interfaces;
-using ShopMgmt.Application.Repositories;
+using ShopMgmt.Application.Interfaces.Repositories;
 using ShopMgmt.Domain.Entities;
 
 namespace ShopMgmt.Infrastructure.Audit;
