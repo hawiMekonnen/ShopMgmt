@@ -12,4 +12,8 @@ public class MaterialUsage
     public string? TailNumber { get; set; }
     public int UserId { get; set; }
     public User User { get; set; } = null!;
+    public int? RequestId { get; set; }
+    public MaterialRequest? Request { get; set; }
+    public int? IssuedByUserId { get; set; }
+    public int? CollectedByUserId { get; set; }
 }

@@ -39,8 +39,14 @@ namespace ShopMgmt.Infrastructure.Migrations
                     b.Property<int>("MaterialId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("RequestId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("ResolvedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("ResolvedNote")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Threshold")
                         .HasColumnType("decimal(18,2)");
@@ -48,11 +54,17 @@ namespace ShopMgmt.Infrastructure.Migrations
                     b.Property<DateTime>("TriggeredAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("AlertId");
 
                     b.HasIndex("CreatedBy");
 
                     b.HasIndex("MaterialId");
+
+                    b.HasIndex("RequestId");
 
                     b.ToTable("Alerts");
                 });
@@ -102,13 +114,18 @@ namespace ShopMgmt.Infrastructure.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryId"));
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("CategoryId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("Categories");
                 });
@@ -121,19 +138,47 @@ namespace ShopMgmt.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MaterialId"));
 
+                    b.Property<string>("AircraftTypes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<int>("CategoryId")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int?>("DefaultShopId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<decimal>("MinStock")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("PartNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("ReorderNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("ReorderPlaced")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Unit")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal>("UnitPrice")
                         .HasColumnType("decimal(18,2)");
@@ -142,7 +187,116 @@ namespace ShopMgmt.Infrastructure.Migrations
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("DefaultShopId");
+
+                    b.HasIndex("PartNumber")
+                        .IsUnique();
+
                     b.ToTable("Materials");
+                });
+
+            modelBuilder.Entity("ShopMgmt.Domain.Entities.MaterialRequest", b =>
+                {
+                    b.Property<int>("RequestId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RequestId"));
+
+                    b.Property<string>("AircraftOrWorkOrder")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("IssuedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("MaterialId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("ReadyAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RequestedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShopId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("RequestId");
+
+                    b.HasIndex("MaterialId");
+
+                    b.HasIndex("RequestedByUserId");
+
+                    b.HasIndex("ShopId");
+
+                    b.ToTable("MaterialRequests");
+                });
+
+            modelBuilder.Entity("ShopMgmt.Domain.Entities.MaterialReturn", b =>
+                {
+                    b.Property<int>("ReturnId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReturnId"));
+
+                    b.Property<int?>("BatchId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("MaterialId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Remarks")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("ReturnedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ReturnedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShopId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("UsageId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ReturnId");
+
+                    b.HasIndex("BatchId");
+
+                    b.HasIndex("MaterialId");
+
+                    b.HasIndex("ReturnedByUserId");
+
+                    b.HasIndex("ShopId");
+
+                    b.HasIndex("UsageId");
+
+                    b.ToTable("MaterialReturns");
                 });
 
             modelBuilder.Entity("ShopMgmt.Domain.Entities.MaterialUsage", b =>
@@ -153,11 +307,23 @@ namespace ShopMgmt.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UsageId"));
 
+                    b.Property<int?>("CollectedByUserId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FlightNumber")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("IssuedByUserId")
+                        .HasColumnType("int");
+
                     b.Property<int>("MaterialId")
                         .HasColumnType("int");
 
                     b.Property<decimal>("QuantityUsed")
                         .HasColumnType("decimal(18,2)");
+
+                    b.Property<int?>("RequestId")
+                        .HasColumnType("int");
 
                     b.Property<int>("ShopId")
                         .HasColumnType("int");
@@ -175,11 +341,48 @@ namespace ShopMgmt.Infrastructure.Migrations
 
                     b.HasIndex("MaterialId");
 
+                    b.HasIndex("RequestId");
+
                     b.HasIndex("ShopId");
 
                     b.HasIndex("UserId");
 
                     b.ToTable("MaterialUsages");
+                });
+
+            modelBuilder.Entity("ShopMgmt.Domain.Entities.ServiceabilityCheck", b =>
+                {
+                    b.Property<int>("CheckId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CheckId"));
+
+                    b.Property<int>("BatchId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CheckedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Passed")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("ReferenceDocument")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TechnicianId")
+                        .HasColumnType("int");
+
+                    b.HasKey("CheckId");
+
+                    b.HasIndex("BatchId");
+
+                    b.HasIndex("TechnicianId");
+
+                    b.ToTable("ServiceabilityChecks");
                 });
 
             modelBuilder.Entity("ShopMgmt.Domain.Entities.Shop", b =>
@@ -219,12 +422,29 @@ namespace ShopMgmt.Infrastructure.Migrations
                     b.Property<decimal>("QuantityReceived")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<DateTime?>("QuarantineDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("QuarantineReason")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("ReceivedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<int?>("ShopId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("BatchId");
 
                     b.HasIndex("MaterialId");
+
+                    b.HasIndex("ShopId");
+
+                    b.HasIndex("Status");
 
                     b.ToTable("StockBatches");
                 });
@@ -245,7 +465,14 @@ namespace ShopMgmt.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("Role")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ShopId")
                         .HasColumnType("int");
 
                     b.HasKey("UserId");
@@ -267,7 +494,14 @@ namespace ShopMgmt.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ShopMgmt.Domain.Entities.MaterialRequest", "Request")
+                        .WithMany()
+                        .HasForeignKey("RequestId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Material");
+
+                    b.Navigation("Request");
 
                     b.Navigation("User");
                 });
@@ -288,10 +522,84 @@ namespace ShopMgmt.Infrastructure.Migrations
                     b.HasOne("ShopMgmt.Domain.Entities.Category", "Category")
                         .WithMany("Materials")
                         .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ShopMgmt.Domain.Entities.Shop", "DefaultShop")
+                        .WithMany()
+                        .HasForeignKey("DefaultShopId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Category");
+
+                    b.Navigation("DefaultShop");
+                });
+
+            modelBuilder.Entity("ShopMgmt.Domain.Entities.MaterialRequest", b =>
+                {
+                    b.HasOne("ShopMgmt.Domain.Entities.Material", "Material")
+                        .WithMany("Requests")
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ShopMgmt.Domain.Entities.User", "RequestedBy")
+                        .WithMany()
+                        .HasForeignKey("RequestedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ShopMgmt.Domain.Entities.Shop", "Shop")
+                        .WithMany()
+                        .HasForeignKey("ShopId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Material");
+
+                    b.Navigation("RequestedBy");
+
+                    b.Navigation("Shop");
+                });
+
+            modelBuilder.Entity("ShopMgmt.Domain.Entities.MaterialReturn", b =>
+                {
+                    b.HasOne("ShopMgmt.Domain.Entities.StockBatch", "Batch")
+                        .WithMany()
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("ShopMgmt.Domain.Entities.Material", "Material")
+                        .WithMany()
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ShopMgmt.Domain.Entities.User", "ReturnedBy")
+                        .WithMany()
+                        .HasForeignKey("ReturnedByUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Category");
+                    b.HasOne("ShopMgmt.Domain.Entities.Shop", "Shop")
+                        .WithMany()
+                        .HasForeignKey("ShopId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ShopMgmt.Domain.Entities.MaterialUsage", "Usage")
+                        .WithMany()
+                        .HasForeignKey("UsageId");
+
+                    b.Navigation("Batch");
+
+                    b.Navigation("Material");
+
+                    b.Navigation("ReturnedBy");
+
+                    b.Navigation("Shop");
+
+                    b.Navigation("Usage");
                 });
 
             modelBuilder.Entity("ShopMgmt.Domain.Entities.MaterialUsage", b =>
@@ -301,6 +609,11 @@ namespace ShopMgmt.Infrastructure.Migrations
                         .HasForeignKey("MaterialId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("ShopMgmt.Domain.Entities.MaterialRequest", "Request")
+                        .WithMany()
+                        .HasForeignKey("RequestId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("ShopMgmt.Domain.Entities.Shop", "Shop")
                         .WithMany("Usages")
@@ -316,9 +629,30 @@ namespace ShopMgmt.Infrastructure.Migrations
 
                     b.Navigation("Material");
 
+                    b.Navigation("Request");
+
                     b.Navigation("Shop");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("ShopMgmt.Domain.Entities.ServiceabilityCheck", b =>
+                {
+                    b.HasOne("ShopMgmt.Domain.Entities.StockBatch", "Batch")
+                        .WithMany()
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ShopMgmt.Domain.Entities.User", "Technician")
+                        .WithMany()
+                        .HasForeignKey("TechnicianId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Batch");
+
+                    b.Navigation("Technician");
                 });
 
             modelBuilder.Entity("ShopMgmt.Domain.Entities.StockBatch", b =>
@@ -329,7 +663,14 @@ namespace ShopMgmt.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("ShopMgmt.Domain.Entities.Shop", "Shop")
+                        .WithMany()
+                        .HasForeignKey("ShopId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Material");
+
+                    b.Navigation("Shop");
                 });
 
             modelBuilder.Entity("ShopMgmt.Domain.Entities.Category", b =>
@@ -339,6 +680,8 @@ namespace ShopMgmt.Infrastructure.Migrations
 
             modelBuilder.Entity("ShopMgmt.Domain.Entities.Material", b =>
                 {
+                    b.Navigation("Requests");
+
                     b.Navigation("StockBatches");
 
                     b.Navigation("Usages");

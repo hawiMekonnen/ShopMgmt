@@ -1,3 +1,5 @@
+using ShopMgmt.Domain.Enums;
+
 namespace ShopMgmt.Domain.Entities;
 
 public class Alert
@@ -11,4 +13,8 @@ public class Alert
     public DateTime? ResolvedAt { get; set; }
     public int CreatedBy { get; set; }
     public User User { get; set; } = null!;
+    public AlertType Type { get; set; }
+    public string? ResolvedNote { get; set; }
+    public int? RequestId { get; set; }
+    public MaterialRequest? Request { get; set; }
 }
