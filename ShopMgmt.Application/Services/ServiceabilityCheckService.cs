@@ -3,13 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using ShopMgmt.Application.DTOs;
 using ShopMgmt.Application.Interfaces.Repositories;
 using ShopMgmt.Application.Interfaces.Services;
 using ShopMgmt.Domain.Entities;
 using ShopMgmt.Domain.Enums;
-using ShopMgmt.Infrastructure.Context;
 
 namespace ShopMgmt.Application.Services;
 
@@ -17,16 +15,13 @@ public class ServiceabilityCheckService : IServiceabilityCheckService
 {
     private readonly IServiceabilityCheckRepository _checkRepository;
     private readonly IStockBatchRepository _stockBatchRepository;
-    private readonly AppDbContext _context;
-
+    // Note: No direct DbContext usage in Application layer.
     public ServiceabilityCheckService(
         IServiceabilityCheckRepository checkRepository,
-        IStockBatchRepository stockBatchRepository,
-        AppDbContext context)
+        IStockBatchRepository stockBatchRepository)
     {
         _checkRepository = checkRepository;
         _stockBatchRepository = stockBatchRepository;
-        _context = context;
     }
 
     public async Task<ServiceabilityCheckDto> RecordCheckAsync(CreateServiceabilityCheckDto dto, CancellationToken cancellationToken = default)
@@ -63,8 +58,8 @@ public class ServiceabilityCheckService : IServiceabilityCheckService
             batch.QuarantineReason = null;
         }
 
-        // Save changes to batch
-        await _context.SaveChangesAsync(cancellationToken);
+        // Persist updated batch via repository
+        await _stockBatchRepository.UpdateAsync(batch, cancellationToken);
 
         // Return DTO
         return new ServiceabilityCheckDto

@@ -10,8 +10,12 @@ using ShopMgmt.Application.Interfaces.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.Text;
 using Serilog;
+using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.IdentityModel.Tokens;
+using ShopMgmt.Application.Validators;
+using ShopMgmt.Application.Interfaces.Services;
+using ShopMgmt.Infrastructure.BackgroundServices;
 
 var builder = WebApplication.CreateBuilder(args);
 

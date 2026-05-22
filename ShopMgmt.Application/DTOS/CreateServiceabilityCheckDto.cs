@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ShopMgmt.Application.DTOS;
+namespace ShopMgmt.Application.DTOs;
 
 public class CreateServiceabilityCheckDto
 {

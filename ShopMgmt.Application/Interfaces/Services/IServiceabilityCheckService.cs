@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using ShopMgmt.Application.DTOs;
-using ShopMgmt.Domain.Entities;
 
 namespace ShopMgmt.Application.Interfaces.Services
 {

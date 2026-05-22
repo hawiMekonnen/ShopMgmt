@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -6,6 +7,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 using BCrypt.Net;
+using ShopMgmt.Application.DTOs;
 using ShopMgmt.Application.DTOS;
 using ShopMgmt.Application.Interfaces.Repositories;
 using ShopMgmt.Domain.Entities;

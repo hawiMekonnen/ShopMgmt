@@ -88,5 +88,20 @@ public DbSet<ServiceabilityCheck> ServiceabilityChecks { get; set; } = null!;
                 .HasForeignKey(a => a.CreatedBy)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+
+        modelBuilder.Entity<ServiceabilityCheck>(entity =>
+        {
+            entity.HasKey(sc => sc.CheckId);
+
+            entity.HasOne(sc => sc.Batch)
+                .WithMany()
+                .HasForeignKey(sc => sc.BatchId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(sc => sc.Technician)
+                .WithMany()
+                .HasForeignKey(sc => sc.TechnicianId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
     }
 }

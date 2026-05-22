@@ -28,6 +28,12 @@ public class StockBatchRepository : IStockBatchRepository
         return batch;
     }
 
+    public async Task UpdateAsync(StockBatch batch, CancellationToken cancellationToken = default)
+    {
+        _context.StockBatches.Update(batch);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
     public async Task DeleteAsync(StockBatch batch, CancellationToken cancellationToken = default)
     {
         _context.StockBatches.Remove(batch);
