@@ -6,6 +6,7 @@ using ShopMgmt.Application.Interfaces;
 using ShopMgmt.Application.Interfaces.Repositories;
 using ShopMgmt.Application.Interfaces.Services;
 using ShopMgmt.Domain.Entities;
+using ShopMgmt.Domain.Enums;
 
 namespace ShopMgmt.Application.Services;
 
@@ -37,10 +38,13 @@ public class MaterialService : IMaterialService
         _updateValidator = updateValidator;
     }
 
-    public async Task<IReadOnlyList<MaterialListItemDto>> GetAllAsync(int? shopId = null, CancellationToken cancellationToken = default)
+    public async Task<IReadOnlyList<MaterialListItemDto>> GetAllAsync(
+        int? shopId = null,
+        bool technicianCatalog = false,
+        CancellationToken cancellationToken = default)
     {
         var rows = await _materialRepository.GetAllWithInventoryAsync(shopId, cancellationToken);
-        return _mapper.Map<IReadOnlyList<MaterialListItemDto>>(rows);
+        return MapCatalogRows(rows, technicianCatalog);
     }
 
     public async Task<IReadOnlyList<MaterialListItemDto>> SearchAsync(
@@ -48,10 +52,29 @@ public class MaterialService : IMaterialService
         string? aircraft,
         string? query,
         int? shopId,
+        bool technicianCatalog = false,
         CancellationToken cancellationToken = default)
     {
         var rows = await _materialRepository.SearchAsync(partNumber, aircraft, query, shopId, cancellationToken);
-        return _mapper.Map<IReadOnlyList<MaterialListItemDto>>(rows);
+        return MapCatalogRows(rows, technicianCatalog);
+    }
+
+    private IReadOnlyList<MaterialListItemDto> MapCatalogRows(
+        IReadOnlyList<Models.MaterialListRow> rows,
+        bool technicianCatalog)
+    {
+        var list = new List<MaterialListItemDto>();
+        foreach (var row in rows)
+        {
+            if (technicianCatalog && row.Material.HiddenFromTechnicians)
+                continue;
+
+            var dto = _mapper.Map<MaterialListItemDto>(row);
+            dto.IsOrderable = row.Available > 0 && !row.Material.HiddenFromTechnicians;
+            list.Add(dto);
+        }
+
+        return list;
     }
 
     public async Task<MaterialDetailDto> GetByIdAsync(int id, int? shopId = null, CancellationToken cancellationToken = default)
@@ -99,9 +122,58 @@ public class MaterialService : IMaterialService
         material.CreatedAt = DateTime.UtcNow;
 
         var created = await _materialRepository.AddAsync(material, cancellationToken);
+
+        if (dto.InitialQuantity > 0)
+        {
+            var shopId = dto.InitialShopId ?? dto.DefaultShopId;
+            var batch = new StockBatch
+            {
+                MaterialId = created.MaterialId,
+                ShopId = shopId,
+                QuantityReceived = dto.InitialQuantity,
+                ReceivedAt = DateTime.UtcNow,
+                CostTotal = dto.InitialQuantity * dto.UnitPrice,
+                Status = MaterialStatus.Serviceable
+            };
+            await _stockBatchRepository.AddAsync(batch, cancellationToken);
+            created.HiddenFromTechnicians = false;
+            await _materialRepository.UpdateAsync(created, cancellationToken);
+        }
+        else
+        {
+            created.HiddenFromTechnicians = true;
+            await _materialRepository.UpdateAsync(created, cancellationToken);
+        }
+
         await _auditRecorder.RecordAsync("Create", nameof(Material), created.MaterialId, $"Created material '{created.Name}'", cancellationToken);
 
         return await GetByIdAsync(created.MaterialId, dto.DefaultShopId, cancellationToken);
+    }
+
+    public async Task SetTechnicianVisibilityAsync(
+        int materialId,
+        bool hiddenFromTechnicians,
+        CancellationToken cancellationToken = default)
+    {
+        var material = await _materialRepository.GetByIdAsync(materialId, cancellationToken)
+            ?? throw new NotFoundException($"Material {materialId} was not found.");
+        material.HiddenFromTechnicians = hiddenFromTechnicians;
+        await _materialRepository.UpdateAsync(material, cancellationToken);
+    }
+
+    public async Task SyncTechnicianVisibilityAsync(
+        int materialId,
+        int? shopId = null,
+        CancellationToken cancellationToken = default)
+    {
+        var material = await _materialRepository.GetByIdAsync(materialId, cancellationToken)
+            ?? throw new NotFoundException($"Material {materialId} was not found.");
+        var inventory = await _materialRepository.GetInventoryAsync(materialId, shopId, cancellationToken);
+        if (inventory is null)
+            return;
+
+        material.HiddenFromTechnicians = inventory.Available <= 0;
+        await _materialRepository.UpdateAsync(material, cancellationToken);
     }
 
     public async Task<MaterialDetailDto> UpdateAsync(int id, UpdateMaterialDto dto, CancellationToken cancellationToken = default)

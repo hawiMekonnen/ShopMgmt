@@ -7,7 +7,7 @@ namespace ShopMgmt.WebAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Admin,ShopManager,Finance")]
+[Authorize(Roles = "Admin,ShopManager,Finance,Technician,Procurement")]
 public class DashboardController : ControllerBase
 {
     private readonly IMaterialService _materialService;

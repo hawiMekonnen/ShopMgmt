@@ -5,5 +5,6 @@ public enum AlertType
     LowStock,
     ExpiryWarning,
     PickupReady,
-    QuarantineReview
+    QuarantineReview,
+    NewMaterialAdded
 }

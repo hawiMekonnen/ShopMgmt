@@ -20,4 +20,6 @@ public class MaterialListItemDto
     public int? DefaultShopId { get; set; }
     public bool ReorderPlaced { get; set; }
     public string? ReorderNote { get; set; }
+    public bool HiddenFromTechnicians { get; set; }
+    public bool IsOrderable { get; set; }
 }

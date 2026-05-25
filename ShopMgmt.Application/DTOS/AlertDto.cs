@@ -1,5 +1,5 @@
-using System;
 namespace ShopMgmt.Application.DTOS;
+
 public class AlertDto
 {
     public int AlertId { get; set; }
@@ -13,4 +13,6 @@ public class AlertDto
     public string Type { get; set; } = string.Empty;
     public string CreatedByName { get; set; } = string.Empty;
     public int? RequestId { get; set; }
+    public string? Note { get; set; }
+    public DateTime CreatedAt { get; set; }
 }

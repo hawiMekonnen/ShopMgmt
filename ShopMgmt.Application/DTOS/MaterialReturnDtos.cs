@@ -39,3 +39,8 @@ public class MarkReorderDto
 {
     public string? ReorderNote { get; set; }
 }
+
+public class MarkReadyDto
+{
+    public string? Notes { get; set; }
+}

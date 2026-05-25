@@ -12,17 +12,23 @@ namespace ShopMgmt.WebAPI.Controllers;
 public class MaterialsController : ControllerBase
 {
     private readonly IMaterialService _materialService;
+    private readonly IAlertService _alertService;
 
-    public MaterialsController(IMaterialService materialService) => _materialService = materialService;
+    public MaterialsController(IMaterialService materialService, IAlertService alertService)
+    {
+        _materialService = materialService;
+        _alertService = alertService;
+    }
 
     [HttpGet]
-    [Authorize(Roles = "Admin,ShopManager,Procurement")]
+    [Authorize(Roles = "Admin,ShopManager,Procurement,Technician")]
     public async Task<ActionResult<IReadOnlyList<MaterialListItemDto>>> GetAll(
         [FromQuery] int? shopId,
         CancellationToken cancellationToken)
     {
         var scopedShopId = ShopScopeHelper.ResolveShopId(User, shopId);
-        return Ok(await _materialService.GetAllAsync(scopedShopId, cancellationToken));
+        var technicianCatalog = User.IsInRole("Technician");
+        return Ok(await _materialService.GetAllAsync(scopedShopId, technicianCatalog, cancellationToken));
     }
 
     [HttpGet("search")]
@@ -35,11 +41,12 @@ public class MaterialsController : ControllerBase
         CancellationToken cancellationToken)
     {
         var scopedShopId = ShopScopeHelper.ResolveShopId(User, shopId);
-        return Ok(await _materialService.SearchAsync(partNumber, aircraft, q, scopedShopId, cancellationToken));
+        var technicianCatalog = User.IsInRole("Technician");
+        return Ok(await _materialService.SearchAsync(partNumber, aircraft, q, scopedShopId, technicianCatalog, cancellationToken));
     }
 
     [HttpGet("{id:int}")]
-    [Authorize(Roles = "Admin,ShopManager,Procurement")]
+    [Authorize(Roles = "Admin,ShopManager,Procurement,Technician")]
     public async Task<ActionResult<MaterialDetailDto>> GetById(
         int id,
         [FromQuery] int? shopId,
@@ -50,7 +57,7 @@ public class MaterialsController : ControllerBase
     }
 
     [HttpGet("{id:int}/inventory")]
-    [Authorize(Roles = "Admin,ShopManager,Procurement")]
+    [Authorize(Roles = "Admin,ShopManager,Procurement,Technician")]
     public async Task<ActionResult<MaterialInventoryDto>> GetInventory(
         int id,
         [FromQuery] int? shopId,
@@ -61,10 +68,17 @@ public class MaterialsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "ShopManager,Admin")]
+    [Authorize(Roles = "Procurement,Admin")]
     public async Task<ActionResult<MaterialDetailDto>> Create([FromBody] CreateMaterialDto dto, CancellationToken cancellationToken)
     {
         var created = await _materialService.CreateAsync(dto, cancellationToken);
+        var userId = UserClaimsHelper.GetUserId(User);
+        await _alertService.CreateNewMaterialAlertAsync(
+            created.MaterialId,
+            created.Name,
+            created.PartNumber,
+            userId,
+            cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = created.MaterialId }, created);
     }
 
@@ -78,6 +92,17 @@ public class MaterialsController : ControllerBase
     public async Task<IActionResult> Delete(int id, CancellationToken cancellationToken)
     {
         await _materialService.DeleteAsync(id, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPatch("{id:int}/technician-visibility")]
+    [Authorize(Roles = "Procurement,Admin")]
+    public async Task<IActionResult> SetTechnicianVisibility(
+        int id,
+        [FromBody] SetMaterialTechnicianVisibilityDto dto,
+        CancellationToken cancellationToken)
+    {
+        await _materialService.SetTechnicianVisibilityAsync(id, dto.HiddenFromTechnicians, cancellationToken);
         return NoContent();
     }
 }

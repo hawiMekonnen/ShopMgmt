@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddScoped<IMaterialRequestService, MaterialRequestService>();
         services.AddScoped<IMaterialReturnService, MaterialReturnService>();
         services.AddScoped<IProcurementService, ProcurementService>();
+        services.AddScoped<IUserService, UserService>();
 
         return services;
     }

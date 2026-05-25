@@ -1,4 +1,7 @@
 using Microsoft.EntityFrameworkCore;
+using ShopMgmt.WebAPI.Hubs;
+using ShopMgmt.WebAPI.Services;
+using ShopMgmt.Application.Interfaces.Services;
 using ShopMgmt.Application.Services;
 using ShopMgmt.Infrastructure.Repositories;
 using ShopMgmt.Infrastructure.Services;
@@ -28,6 +31,7 @@ builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddValidatorsFromAssemblyContaining<UpdateMaterialDtoValidator>();
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 builder.Services.AddOpenApi();
 
 // JWT Authentication
@@ -44,6 +48,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(key),
             ClockSkew = TimeSpan.Zero
+        };
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/shopMgmtHub"))
+                    context.Token = accessToken;
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -66,7 +81,8 @@ builder.Services.AddCors(options =>
                 "http://localhost:5173",
                 "https://localhost:5173")
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 
@@ -81,6 +97,7 @@ builder.Services.AddScoped<IServiceabilityCheckRepository, ServiceabilityCheckRe
 builder.Services.AddScoped<IShopService, ShopService>();
 builder.Services.AddScoped<IMaterialUsageService, MaterialUsageService>();
 builder.Services.AddScoped<IAlertService, AlertService>();
+builder.Services.AddScoped<IRealtimeNotifier, SignalRRealtimeNotifier>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<IServiceabilityCheckService, ServiceabilityCheckService>();
@@ -99,11 +116,14 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
-
-app.UseHttpsRedirection();
+else
+{
+    app.UseHttpsRedirection();
+}
 app.UseCors("SpaClient");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<ShopMgmtHub>("/shopMgmtHub").RequireAuthorization();
 
 app.Run();

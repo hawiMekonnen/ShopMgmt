@@ -16,6 +16,8 @@ public class Material
     public Shop? DefaultShop { get; set; }
     public bool ReorderPlaced { get; set; }
     public string? ReorderNote { get; set; }
+    /// <summary>When true, technicians cannot see or order this material in catalog search.</summary>
+    public bool HiddenFromTechnicians { get; set; }
     public DateTime CreatedAt { get; set; }
 
     public ICollection<MaterialUsage> Usages { get; set; } = new List<MaterialUsage>();

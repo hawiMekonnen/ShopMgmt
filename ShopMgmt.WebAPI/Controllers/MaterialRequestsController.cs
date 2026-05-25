@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using ShopMgmt.Application.DTOs;
 using ShopMgmt.Application.Interfaces.Services;
 using ShopMgmt.Domain.Enums;
+using ShopMgmt.WebAPI.Authorization;
 
 namespace ShopMgmt.WebAPI.Controllers;
 
@@ -22,19 +23,27 @@ public class MaterialRequestsController : ControllerBase
         [FromQuery] RequestStatus? status,
         [FromQuery] int? userId,
         CancellationToken cancellationToken)
-        => Ok(await _requestService.ListAsync(shopId, status, userId, cancellationToken));
+    {
+        var scopedShopId = ShopScopeHelper.ResolveShopId(User, shopId);
+        int? filterUserId = User.IsInRole("Technician") ? GetUserId() : userId;
+        return Ok(await _requestService.ListAsync(scopedShopId, status, filterUserId, cancellationToken));
+    }
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<MaterialRequestDto>> GetById(int id, CancellationToken cancellationToken)
         => Ok(await _requestService.GetByIdAsync(id, cancellationToken));
 
     [HttpPost]
-    [Authorize(Roles = "Technician,ShopManager,Admin")]
+    [Authorize(Roles = "Technician")]
     public async Task<ActionResult<MaterialRequestDto>> Submit(
         [FromBody] CreateMaterialRequestDto dto,
         CancellationToken cancellationToken)
     {
         var userId = GetUserId();
+        var scopedShopId = ShopScopeHelper.ResolveShopId(User, dto.ShopId);
+        if (scopedShopId.HasValue)
+            dto.ShopId = scopedShopId.Value;
+
         var created = await _requestService.SubmitAsync(dto, userId, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = created.RequestId }, created);
     }
@@ -43,6 +52,17 @@ public class MaterialRequestsController : ControllerBase
     [Authorize(Roles = "ShopManager,Admin")]
     public async Task<ActionResult<MaterialRequestDto>> ReleaseForIssue(int id, CancellationToken cancellationToken)
         => Ok(await _requestService.ReleaseForIssueAsync(id, cancellationToken));
+
+    [HttpPatch("{id:int}/reject")]
+    [Authorize(Roles = "ShopManager,Admin")]
+    public async Task<ActionResult<MaterialRequestDto>> Reject(
+        int id,
+        [FromBody] RejectMaterialRequestDto? dto,
+        CancellationToken cancellationToken)
+    {
+        var rejectedBy = GetUserId();
+        return Ok(await _requestService.RejectAsync(id, dto, rejectedBy, cancellationToken));
+    }
 
     [HttpPatch("{id:int}/issue")]
     [Authorize(Roles = "ShopManager,Technician,Admin")]
@@ -56,7 +76,7 @@ public class MaterialRequestsController : ControllerBase
     }
 
     [HttpPatch("{id:int}/cancel")]
-    [Authorize(Roles = "ShopManager,Technician,Admin")]
+    [Authorize(Roles = "Technician,ShopManager,Admin")]
     public async Task<ActionResult<MaterialRequestDto>> Cancel(
         int id,
         [FromBody] CancelMaterialRequestDto? dto,

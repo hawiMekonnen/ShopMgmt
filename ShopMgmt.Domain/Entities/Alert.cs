@@ -17,4 +17,6 @@ public class Alert
     public string? ResolvedNote { get; set; }
     public int? RequestId { get; set; }
     public MaterialRequest? Request { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public string? Note { get; set; }
 }

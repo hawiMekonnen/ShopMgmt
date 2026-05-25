@@ -6,5 +6,6 @@ public enum RequestStatus
     Approved,
     ReadyForPickup,
     Issued,
-    Cancelled
+    Cancelled,
+    Rejected
 }

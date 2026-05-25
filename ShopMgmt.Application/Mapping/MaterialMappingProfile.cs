@@ -27,7 +27,9 @@ public class MaterialMappingProfile : Profile
             .ForMember(d => d.MinStock, opt => opt.MapFrom(s => s.Material.MinStock))
             .ForMember(d => d.DefaultShopId, opt => opt.MapFrom(s => s.Material.DefaultShopId))
             .ForMember(d => d.ReorderPlaced, opt => opt.MapFrom(s => s.Material.ReorderPlaced))
-            .ForMember(d => d.ReorderNote, opt => opt.MapFrom(s => s.Material.ReorderNote));
+            .ForMember(d => d.ReorderNote, opt => opt.MapFrom(s => s.Material.ReorderNote))
+            .ForMember(d => d.HiddenFromTechnicians, opt => opt.MapFrom(s => s.Material.HiddenFromTechnicians))
+            .ForMember(d => d.IsOrderable, opt => opt.Ignore());
 
         CreateMap<Material, MaterialDetailDto>()
             .ForMember(d => d.CategoryName, opt => opt.MapFrom(s => s.Category.Name))

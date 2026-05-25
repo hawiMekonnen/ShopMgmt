@@ -2,6 +2,7 @@ using ShopMgmt.Application.DTOs;
 using ShopMgmt.Application.Exceptions;
 using ShopMgmt.Application.Interfaces.Repositories;
 using ShopMgmt.Application.Interfaces.Services;
+using ShopMgmt.Application.Interfaces;
 using ShopMgmt.Domain.Entities;
 using ShopMgmt.Domain.Enums;
 
@@ -13,17 +14,26 @@ public class MaterialRequestService : IMaterialRequestService
     private readonly IMaterialRepository _materialRepository;
     private readonly IMaterialUsageService _usageService;
     private readonly IAlertRepository _alertRepository;
+    private readonly IAlertService _alertService;
+    private readonly IMaterialService _materialService;
+    private readonly IAuditRecorder _auditRecorder;
 
     public MaterialRequestService(
         IMaterialRequestRepository requestRepository,
         IMaterialRepository materialRepository,
         IMaterialUsageService usageService,
-        IAlertRepository alertRepository)
+        IAlertRepository alertRepository,
+        IAlertService alertService,
+        IMaterialService materialService,
+        IAuditRecorder auditRecorder)
     {
         _requestRepository = requestRepository;
         _materialRepository = materialRepository;
         _usageService = usageService;
         _alertRepository = alertRepository;
+        _alertService = alertService;
+        _materialService = materialService;
+        _auditRecorder = auditRecorder;
     }
 
     public async Task<MaterialRequestDto> SubmitAsync(
@@ -33,6 +43,12 @@ public class MaterialRequestService : IMaterialRequestService
     {
         if (!await _materialRepository.ExistsAsync(dto.MaterialId, cancellationToken))
             throw new NotFoundException($"Material {dto.MaterialId} was not found.");
+
+        var material = await _materialRepository.GetByIdAsync(dto.MaterialId, cancellationToken)
+            ?? throw new NotFoundException($"Material {dto.MaterialId} was not found.");
+
+        if (material.HiddenFromTechnicians)
+            throw new ConflictException("This material is not available for ordering. Contact procurement.");
 
         var inventory = await _materialRepository.GetInventoryAsync(dto.MaterialId, dto.ShopId, cancellationToken);
         if (inventory is null)
@@ -62,6 +78,7 @@ public class MaterialRequestService : IMaterialRequestService
         };
 
         var created = await _requestRepository.AddAsync(request, cancellationToken);
+        await _auditRecorder.RecordAsync("SubmitRequest", nameof(MaterialRequest), created.RequestId, $"Submitted request for {created.Quantity} unit(s) of material ID {created.MaterialId} for work order {created.AircraftOrWorkOrder}", cancellationToken);
         return MapToDto(created);
     }
 
@@ -82,33 +99,31 @@ public class MaterialRequestService : IMaterialRequestService
         return MapToDto(request);
     }
 
-    public async Task<MaterialRequestDto> ReleaseForIssueAsync(int requestId, CancellationToken cancellationToken = default)
+    public async Task<MaterialRequestDto> ReleaseForIssueAsync(int requestId, CancellationToken cancellationToken)
     {
         var request = await _requestRepository.GetByIdAsync(requestId, cancellationToken)
             ?? throw new NotFoundException($"Request {requestId} was not found.");
 
-        if (request.Status is RequestStatus.ReadyForPickup or RequestStatus.Issued or RequestStatus.Cancelled)
+        if (request.Status is RequestStatus.ReadyForPickup or RequestStatus.Issued or RequestStatus.Cancelled or RequestStatus.Rejected)
             throw new ConflictException($"Request cannot be released in status {request.Status}.");
 
-        if (request.Status == RequestStatus.Submitted)
-        {
-            var inventory = await _materialRepository.GetInventoryAsync(request.MaterialId, request.ShopId, cancellationToken);
-            if (inventory is null || request.Quantity > inventory.Available)
-                throw new ConflictException("Cannot release: insufficient available stock.");
-        }
-        else if (request.Status != RequestStatus.Approved)
-        {
-            throw new ConflictException($"Request must be submitted to release. Current: {request.Status}.");
-        }
+        if (request.Status != RequestStatus.Submitted)
+            throw new ConflictException($"Only submitted requests can be approved. Current: {request.Status}.");
 
+        var inventory = await _materialRepository.GetInventoryAsync(request.MaterialId, request.ShopId, cancellationToken);
+        if (inventory is null || request.Quantity > inventory.Available)
+            throw new ConflictException("Cannot approve: insufficient available stock.");
 
         var now = DateTime.UtcNow;
-        request.Status = RequestStatus.ReadyForPickup;
+        request.Status = RequestStatus.Approved;
         request.ApprovedAt ??= now;
-        request.ReadyAt = now;
         await _requestRepository.UpdateAsync(request, cancellationToken);
-        await EnsurePickupReadyAlertAsync(request, cancellationToken);
+        
+        await _auditRecorder.RecordAsync("ReleaseRequest", nameof(MaterialRequest), request.RequestId, $"Released request for issue", cancellationToken);
+        
+        await _alertService.CheckAndCreateLowStockAlertsAsync();
 
+        // Do not create pickup alert here; procurement will mark ready later.
         return MapToDto((await _requestRepository.GetByIdAsync(requestId, cancellationToken))!);
     }
 
@@ -153,6 +168,11 @@ public class MaterialRequestService : IMaterialRequestService
         request.IssuedAt = DateTime.UtcNow;
         await _requestRepository.UpdateAsync(request, cancellationToken);
 
+        await _auditRecorder.RecordAsync("IssueRequest", nameof(MaterialRequest), request.RequestId, $"Issued {request.Quantity} units to technician (collected by User ID {dto.CollectedByUserId})", cancellationToken);
+
+        await _alertService.CheckAndCreateLowStockAlertsAsync();
+        await _materialService.SyncTechnicianVisibilityAsync(request.MaterialId, request.ShopId, cancellationToken);
+
         return MapToDto((await _requestRepository.GetByIdAsync(requestId, cancellationToken))!);
     }
 
@@ -164,13 +184,45 @@ public class MaterialRequestService : IMaterialRequestService
         var request = await _requestRepository.GetByIdAsync(requestId, cancellationToken)
             ?? throw new NotFoundException($"Request {requestId} was not found.");
 
-        if (request.Status is RequestStatus.Issued or RequestStatus.Cancelled)
+        if (request.Status is RequestStatus.Issued or RequestStatus.Cancelled or RequestStatus.Rejected)
             throw new ConflictException($"Request cannot be cancelled in status {request.Status}.");
 
         request.Status = RequestStatus.Cancelled;
         if (dto?.Notes is not null)
             request.Notes = dto.Notes;
         await _requestRepository.UpdateAsync(request, cancellationToken);
+
+        await _auditRecorder.RecordAsync("CancelRequest", nameof(MaterialRequest), request.RequestId, $"Cancelled request. Notes: {dto?.Notes ?? "None"}", cancellationToken);
+
+        await _alertService.CheckAndCreateLowStockAlertsAsync();
+
+        return MapToDto((await _requestRepository.GetByIdAsync(requestId, cancellationToken))!);
+    }
+
+    public async Task<MaterialRequestDto> RejectAsync(
+        int requestId,
+        RejectMaterialRequestDto? dto,
+        int rejectedByUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var request = await _requestRepository.GetByIdAsync(requestId, cancellationToken)
+            ?? throw new NotFoundException($"Request {requestId} was not found.");
+
+        if (request.Status != RequestStatus.Submitted)
+            throw new ConflictException($"Only submitted requests can be rejected. Current: {request.Status}.");
+
+        request.Status = RequestStatus.Rejected;
+        if (!string.IsNullOrWhiteSpace(dto?.Notes))
+            request.Notes = dto.Notes.Trim();
+
+        await _requestRepository.UpdateAsync(request, cancellationToken);
+        await _auditRecorder.RecordAsync(
+            "RejectRequest",
+            nameof(MaterialRequest),
+            request.RequestId,
+            $"Rejected by user {rejectedByUserId}. Notes: {dto?.Notes ?? "None"}",
+            cancellationToken);
+
         return MapToDto((await _requestRepository.GetByIdAsync(requestId, cancellationToken))!);
     }
 

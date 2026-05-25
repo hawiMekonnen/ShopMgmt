@@ -72,6 +72,7 @@ public class AuthController : ControllerBase
             Token = tokenString,
             Email = user.Email,
             Role = user.Role.ToString(),
+            UserId = user.UserId,
             ShopId = user.ShopId
         };
 

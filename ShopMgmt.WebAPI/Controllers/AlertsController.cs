@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopMgmt.Application.DTOS;
 using ShopMgmt.Application.Interfaces.Services;
+using ShopMgmt.WebAPI.Authorization;
 
 namespace ShopMgmt.WebAPI.Controllers;
 
@@ -29,6 +30,8 @@ public class AlertsController : ControllerBase
     [HttpPatch("{id:int}/resolve")]
     public async Task<ActionResult<AlertDto>> Resolve(int id, [FromBody] ResolveAlertDto dto)
     {
+        if (dto.ResolvedBy <= 0)
+            dto.ResolvedBy = UserClaimsHelper.GetUserId(User);
         var result = await _alertService.ResolveAlertAsync(id, dto);
         return Ok(result);
     }

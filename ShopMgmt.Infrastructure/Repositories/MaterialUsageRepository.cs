@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using ShopMgmt.Application.Interfaces.Repositories;
@@ -32,6 +33,20 @@ public class MaterialUsageRepository : IMaterialUsageRepository
             .Where(mu => mu.ShopId == shopId)
             .ToListAsync();
     }
+
+    public async Task<IReadOnlyList<MaterialUsage>> GetRecentByShopAsync(
+        int shopId,
+        int take,
+        CancellationToken cancellationToken = default)
+        => await _context.MaterialUsages
+            .Include(mu => mu.Material)
+            .Include(mu => mu.Shop)
+            .Include(mu => mu.User)
+            .Where(mu => mu.ShopId == shopId)
+            .OrderByDescending(mu => mu.UsedAt)
+            .Take(take)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
 
     public async Task<MaterialUsage?> GetByIdAsync(int usageId)
     {

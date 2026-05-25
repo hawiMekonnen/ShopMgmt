@@ -11,4 +11,5 @@ public interface IMaterialRequestService
     Task<MaterialRequestDto> ReleaseForIssueAsync(int requestId, CancellationToken cancellationToken = default);
     Task<MaterialRequestDto> IssueAsync(int requestId, IssueMaterialRequestDto dto, int issuedByUserId, CancellationToken cancellationToken = default);
     Task<MaterialRequestDto> CancelAsync(int requestId, CancelMaterialRequestDto? dto, CancellationToken cancellationToken = default);
+    Task<MaterialRequestDto> RejectAsync(int requestId, RejectMaterialRequestDto? dto, int rejectedByUserId, CancellationToken cancellationToken = default);
 }

@@ -11,4 +11,7 @@ public class CreateMaterialDto
     public string Unit { get; set; } = string.Empty;
     public decimal MinStock { get; set; } = 10m;
     public int? DefaultShopId { get; set; }
+    /// <summary>Opening quantity recorded as a serviceable stock batch at create time.</summary>
+    public decimal InitialQuantity { get; set; }
+    public int? InitialShopId { get; set; }
 }

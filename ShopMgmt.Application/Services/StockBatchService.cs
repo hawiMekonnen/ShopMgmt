@@ -16,19 +16,25 @@ public class StockBatchService : IStockBatchService
     private readonly IMapper _mapper;
     private readonly IAuditRecorder _auditRecorder;
     private readonly IValidator<CreateStockBatchDto> _createValidator;
+    private readonly IAlertService _alertService;
+    private readonly IMaterialService _materialService;
 
     public StockBatchService(
         IStockBatchRepository stockBatchRepository,
         IMaterialRepository materialRepository,
         IMapper mapper,
         IAuditRecorder auditRecorder,
-        IValidator<CreateStockBatchDto> createValidator)
+        IValidator<CreateStockBatchDto> createValidator,
+        IAlertService alertService,
+        IMaterialService materialService)
     {
         _stockBatchRepository = stockBatchRepository;
         _materialRepository = materialRepository;
         _mapper = mapper;
         _auditRecorder = auditRecorder;
         _createValidator = createValidator;
+        _alertService = alertService;
+        _materialService = materialService;
     }
 
     public async Task<IReadOnlyList<StockBatchDto>> GetByMaterialIdAsync(int materialId, CancellationToken cancellationToken = default)
@@ -55,6 +61,10 @@ public class StockBatchService : IStockBatchService
         await _auditRecorder.RecordAsync("Receive", nameof(StockBatch), created.BatchId,
             $"Received {created.QuantityReceived} units for material {materialId}", cancellationToken);
 
+        await _alertService.CheckAndCreateLowStockAlertsAsync();
+        await _alertService.CheckAndCreateExpiryAlertsAsync();
+        await _materialService.SyncTechnicianVisibilityAsync(materialId, dto.ShopId, cancellationToken);
+
         return _mapper.Map<StockBatchDto>(created);
     }
 
@@ -70,5 +80,8 @@ public class StockBatchService : IStockBatchService
         await _stockBatchRepository.DeleteAsync(batch, cancellationToken);
         await _auditRecorder.RecordAsync("Delete", nameof(StockBatch), batchId,
             $"Deleted stock batch for material {materialId}", cancellationToken);
+
+        await _alertService.CheckAndCreateLowStockAlertsAsync();
+        await _materialService.SyncTechnicianVisibilityAsync(materialId, batch.ShopId, cancellationToken);
     }
 }

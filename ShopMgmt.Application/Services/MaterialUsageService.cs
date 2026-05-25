@@ -10,13 +10,16 @@ public class MaterialUsageService : IMaterialUsageService
 {
     private readonly IMaterialUsageRepository _usageRepository;
     private readonly IMaterialRepository _materialRepository;
+    private readonly IAlertService _alertService;
 
     public MaterialUsageService(
         IMaterialUsageRepository usageRepository,
-        IMaterialRepository materialRepository)
+        IMaterialRepository materialRepository,
+        IAlertService alertService)
     {
         _usageRepository = usageRepository;
         _materialRepository = materialRepository;
+        _alertService = alertService;
     }
 
     public async Task<MaterialUsageDto> RecordUsageAsync(CreateMaterialUsageDto createUsageDto)
@@ -41,6 +44,9 @@ public class MaterialUsageService : IMaterialUsageService
 
         var createdUsage = await _usageRepository.AddAsync(usage);
         var fetchedUsage = await _usageRepository.GetByIdAsync(createdUsage.UsageId);
+        
+        await _alertService.CheckAndCreateLowStockAlertsAsync();
+
         return MapToDto(fetchedUsage ?? createdUsage);
     }
 
@@ -89,11 +95,13 @@ public class MaterialUsageService : IMaterialUsageService
         existingUsage.UserId = updateUsageDto.UserId;
 
         await _usageRepository.UpdateAsync(existingUsage);
+        await _alertService.CheckAndCreateLowStockAlertsAsync();
     }
 
     public async Task DeleteUsageAsync(int usageId)
     {
         await _usageRepository.DeleteAsync(usageId);
+        await _alertService.CheckAndCreateLowStockAlertsAsync();
     }
 
     private static MaterialUsageDto MapToDto(MaterialUsage usage)
