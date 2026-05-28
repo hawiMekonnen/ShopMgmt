@@ -12,15 +12,18 @@ public class UserService : IUserService
     private readonly IUserRepository _userRepository;
     private readonly IMaterialRequestRepository _requestRepository;
     private readonly IMaterialUsageRepository _usageRepository;
+    private readonly IShopRepository _shopRepository;
 
     public UserService(
         IUserRepository userRepository,
         IMaterialRequestRepository requestRepository,
-        IMaterialUsageRepository usageRepository)
+        IMaterialUsageRepository usageRepository,
+        IShopRepository shopRepository)
     {
         _userRepository = userRepository;
         _requestRepository = requestRepository;
         _usageRepository = usageRepository;
+        _shopRepository = shopRepository;
     }
 
     public async Task<IReadOnlyList<UserListItemDto>> GetTechniciansForShopAsync(
@@ -57,6 +60,40 @@ public class UserService : IUserService
 
         var created = await _userRepository.AddAsync(user, cancellationToken);
         return MapUser(created);
+    }
+
+    public async Task<UserListItemDto> CreateShopManagerAsync(
+        CreateShopManagerDto dto,
+        CancellationToken cancellationToken = default)
+    {
+        var email = dto.Email.Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(dto.Name) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(dto.Password))
+            throw new ConflictException("Name, email, and password are required.");
+        if (dto.Password.Length < 6)
+            throw new ConflictException("Password must be at least 6 characters.");
+
+        if (await _shopRepository.GetByIdAsync(dto.ShopId) is null)
+            throw new NotFoundException($"Shop {dto.ShopId} was not found.");
+        if (await _userRepository.EmailExistsAsync(email, cancellationToken))
+            throw new ConflictException($"Email '{email}' is already registered.");
+
+        var user = new User
+        {
+            Name = dto.Name.Trim(),
+            Email = email,
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password),
+            Role = UserRole.ShopManager,
+            ShopId = dto.ShopId
+        };
+
+        var created = await _userRepository.AddAsync(user, cancellationToken);
+        return MapUser(created);
+    }
+
+    public async Task<IReadOnlyList<UserListItemDto>> GetShopManagersAsync(CancellationToken cancellationToken = default)
+    {
+        var users = await _userRepository.GetByRoleAsync(UserRole.ShopManager, cancellationToken);
+        return users.Select(MapUser).ToList();
     }
 
     public async Task<ShopActivityDto> GetShopActivityAsync(int shopId, CancellationToken cancellationToken = default)

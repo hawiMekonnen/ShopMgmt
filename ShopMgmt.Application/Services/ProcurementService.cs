@@ -126,6 +126,48 @@ public class ProcurementService : IProcurementService
         return actions.AsReadOnly();
     }
 
+    public async Task<ProcurementBudgetReportDto> GetBudgetReportAsync(int? shopId = null, CancellationToken cancellationToken = default)
+    {
+        var purchases = await _stockBatchRepository.ListPurchasesAsync(shopId, cancellationToken);
+
+        var purchaseDtos = purchases.Select(p => new ProcurementPurchaseDto
+        {
+            BatchId = p.BatchId,
+            MaterialId = p.MaterialId,
+            MaterialName = p.Material?.Name ?? string.Empty,
+            PartNumber = p.Material?.PartNumber ?? string.Empty,
+            ShopId = p.ShopId,
+            ShopName = p.Shop?.Name ?? "Central stock",
+            QuantityReceived = p.QuantityReceived,
+            UnitPrice = p.QuantityReceived > 0 ? Math.Round(p.CostTotal / p.QuantityReceived, 2) : 0m,
+            CostTotal = p.CostTotal,
+            Unit = p.Material?.Unit ?? string.Empty,
+            ReceivedAt = p.ReceivedAt
+        }).ToList();
+
+        var monthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1);
+        var byShop = purchaseDtos
+            .GroupBy(p => new { p.ShopId, p.ShopName })
+            .Select(g => new ShopSpendSummaryDto
+            {
+                ShopId = g.Key.ShopId,
+                ShopName = g.Key.ShopName,
+                TotalSpent = g.Sum(x => x.CostTotal),
+                TotalQuantity = g.Sum(x => x.QuantityReceived)
+            })
+            .OrderByDescending(x => x.TotalSpent)
+            .ToList();
+
+        return new ProcurementBudgetReportDto
+        {
+            TotalSpent = purchaseDtos.Sum(p => p.CostTotal),
+            MonthlySpent = purchaseDtos.Where(p => p.ReceivedAt >= monthStart).Sum(p => p.CostTotal),
+            TotalQuantityPurchased = purchaseDtos.Sum(p => p.QuantityReceived),
+            ByShop = byShop,
+            Purchases = purchaseDtos
+        };
+    }
+
     private static MaterialRequestDto MapToDto(MaterialRequest request) => new()
     {
         RequestId = request.RequestId,

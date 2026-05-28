@@ -13,5 +13,8 @@ public class CreateMaterialDtoValidator : AbstractValidator<CreateMaterialDto>
         RuleFor(x => x.UnitPrice).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Unit).NotEmpty().MaximumLength(50);
         RuleFor(x => x.MinStock).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.InitialQuantity)
+            .GreaterThan(0)
+            .WithMessage("Initial quantity is required so new materials start with available stock.");
     }
 }

@@ -10,5 +10,6 @@ public interface IStockBatchRepository
     Task DeleteAsync(StockBatch batch, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<StockBatch>> GetExpiringBeforeAsync(DateTime cutoffDate, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<StockBatch>> GetQuarantinedAsync(CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<StockBatch>> ListPurchasesAsync(int? shopId = null, CancellationToken cancellationToken = default);
     Task UpdateAsync(StockBatch batch, CancellationToken cancellationToken = default);
 }

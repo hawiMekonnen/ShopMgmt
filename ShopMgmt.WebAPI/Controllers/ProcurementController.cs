@@ -26,6 +26,13 @@ public class ProcurementController : ControllerBase
         CancellationToken cancellationToken)
         => Ok(await _procurementService.GetActionsAsync(shopId, cancellationToken));
 
+    [HttpGet("budget-report")]
+    [Authorize(Roles = "Procurement,Admin")]
+    public async Task<ActionResult<ProcurementBudgetReportDto>> GetBudgetReport(
+        [FromQuery] int? shopId,
+        CancellationToken cancellationToken)
+        => Ok(await _procurementService.GetBudgetReportAsync(shopId, cancellationToken));
+
     [HttpPost("materials")]
     [Authorize(Policy = "RequireProcurement")]
     public async Task<ActionResult<MaterialDto>> AddMaterial([FromBody] CreateMaterialDto dto, CancellationToken cancellationToken)

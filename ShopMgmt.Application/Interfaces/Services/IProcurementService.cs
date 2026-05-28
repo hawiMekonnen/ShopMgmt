@@ -8,4 +8,5 @@ public interface IProcurementService
     Task<MaterialDto> AddMaterialAsync(CreateMaterialDto dto, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<ProcurementActionDto>> GetActionsAsync(int? shopId = null, CancellationToken cancellationToken = default);
     Task MarkReorderAsync(int materialId, MarkReorderDto dto, CancellationToken cancellationToken = default);
+    Task<ProcurementBudgetReportDto> GetBudgetReportAsync(int? shopId = null, CancellationToken cancellationToken = default);
 }

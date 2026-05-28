@@ -48,4 +48,11 @@ public class UserRepository : IUserRepository
             .OrderBy(u => u.Name)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<User>> GetByRoleAsync(UserRole role, CancellationToken cancellationToken = default)
+        => await _context.Users
+            .Where(u => u.Role == role)
+            .OrderBy(u => u.Name)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
 }

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using ShopMgmt.Application.DTOs;
+using ShopMgmt.Application.Exceptions;
 using ShopMgmt.Application.Interfaces.Services;
 using ShopMgmt.Domain.Enums;
 using ShopMgmt.WebAPI.Authorization;
@@ -51,7 +52,10 @@ public class MaterialRequestsController : ControllerBase
     [HttpPatch("{id:int}/release")]
     [Authorize(Roles = "ShopManager,Admin")]
     public async Task<ActionResult<MaterialRequestDto>> ReleaseForIssue(int id, CancellationToken cancellationToken)
-        => Ok(await _requestService.ReleaseForIssueAsync(id, cancellationToken));
+    {
+        await EnsureRequestInUserScopeAsync(id, cancellationToken);
+        return Ok(await _requestService.ReleaseForIssueAsync(id, cancellationToken));
+    }
 
     [HttpPatch("{id:int}/reject")]
     [Authorize(Roles = "ShopManager,Admin")]
@@ -60,6 +64,7 @@ public class MaterialRequestsController : ControllerBase
         [FromBody] RejectMaterialRequestDto? dto,
         CancellationToken cancellationToken)
     {
+        await EnsureRequestInUserScopeAsync(id, cancellationToken);
         var rejectedBy = GetUserId();
         return Ok(await _requestService.RejectAsync(id, dto, rejectedBy, cancellationToken));
     }
@@ -71,6 +76,7 @@ public class MaterialRequestsController : ControllerBase
         [FromBody] IssueMaterialRequestDto dto,
         CancellationToken cancellationToken)
     {
+        await EnsureRequestInUserScopeAsync(id, cancellationToken);
         var issuedBy = GetUserId();
         return Ok(await _requestService.IssueAsync(id, dto, issuedBy, cancellationToken));
     }
@@ -81,7 +87,28 @@ public class MaterialRequestsController : ControllerBase
         int id,
         [FromBody] CancelMaterialRequestDto? dto,
         CancellationToken cancellationToken)
-        => Ok(await _requestService.CancelAsync(id, dto, cancellationToken));
+    {
+        await EnsureRequestInUserScopeAsync(id, cancellationToken);
+        return Ok(await _requestService.CancelAsync(id, dto, cancellationToken));
+    }
+
+    private async Task EnsureRequestInUserScopeAsync(int requestId, CancellationToken cancellationToken)
+    {
+        var request = await _requestService.GetByIdAsync(requestId, cancellationToken);
+        if (User.IsInRole("ShopManager"))
+        {
+            var managerShopId = ShopScopeHelper.ResolveShopId(User, null);
+            if (managerShopId.HasValue && request.ShopId != managerShopId.Value)
+                throw new ConflictException("You can only manage requests from your assigned shop.");
+        }
+
+        if (User.IsInRole("Technician"))
+        {
+            var userId = GetUserId();
+            if (request.RequestedByUserId != userId)
+                throw new ConflictException("You can only manage your own requests.");
+        }
+    }
 
     private int GetUserId() =>
         int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);

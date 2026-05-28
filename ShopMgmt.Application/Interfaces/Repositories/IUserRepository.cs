@@ -10,4 +10,5 @@ public interface IUserRepository
     Task<User> AddAsync(User user, CancellationToken cancellationToken = default);
     Task<bool> EmailExistsAsync(string email, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<User>> GetByShopAndRoleAsync(int shopId, UserRole role, CancellationToken cancellationToken = default);
+    Task<IReadOnlyList<User>> GetByRoleAsync(UserRole role, CancellationToken cancellationToken = default);
 }

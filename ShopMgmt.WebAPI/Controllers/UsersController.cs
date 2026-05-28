@@ -29,13 +29,14 @@ public class UsersController : ControllerBase
     [HttpPost("technicians")]
     [Authorize(Roles = "ShopManager,Admin")]
     public async Task<ActionResult<UserListItemDto>> CreateTechnician(
+        [FromQuery] int? shopId,
         [FromBody] CreateTechnicianDto dto,
         CancellationToken cancellationToken)
     {
-        var shopId = ShopScopeHelper.ResolveShopId(User, null)
-            ?? throw new BadHttpRequestException("Your account must be linked to a shop.");
-        var created = await _userService.CreateTechnicianAsync(shopId, dto, cancellationToken);
-        return CreatedAtAction(nameof(GetTechnicians), new { shopId }, created);
+        var resolvedShopId = ShopScopeHelper.ResolveShopId(User, shopId)
+            ?? throw new BadHttpRequestException("Shop id is required.");
+        var created = await _userService.CreateTechnicianAsync(resolvedShopId, dto, cancellationToken);
+        return CreatedAtAction(nameof(GetTechnicians), new { shopId = resolvedShopId }, created);
     }
 
     [HttpGet("shop-activity")]
@@ -47,5 +48,20 @@ public class UsersController : ControllerBase
         var resolvedShopId = ShopScopeHelper.ResolveShopId(User, shopId)
             ?? throw new BadHttpRequestException("Shop id is required.");
         return Ok(await _userService.GetShopActivityAsync(resolvedShopId, cancellationToken));
+    }
+
+    [HttpGet("managers")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<IReadOnlyList<UserListItemDto>>> GetShopManagers(CancellationToken cancellationToken)
+        => Ok(await _userService.GetShopManagersAsync(cancellationToken));
+
+    [HttpPost("managers")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<UserListItemDto>> CreateShopManager(
+        [FromBody] CreateShopManagerDto dto,
+        CancellationToken cancellationToken)
+    {
+        var created = await _userService.CreateShopManagerAsync(dto, cancellationToken);
+        return CreatedAtAction(nameof(GetShopManagers), new { id = created.UserId }, created);
     }
 }

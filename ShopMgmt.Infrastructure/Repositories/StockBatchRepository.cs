@@ -52,4 +52,20 @@ public class StockBatchRepository : IStockBatchRepository
             .Where(b => b.Status == Domain.Enums.MaterialStatus.Quarantined)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<StockBatch>> ListPurchasesAsync(int? shopId = null, CancellationToken cancellationToken = default)
+    {
+        var q = _context.StockBatches
+            .Include(b => b.Material)
+            .Include(b => b.Shop)
+            .AsQueryable();
+
+        if (shopId.HasValue)
+            q = q.Where(b => b.ShopId == shopId.Value);
+
+        return await q
+            .OrderByDescending(b => b.ReceivedAt)
+            .AsNoTracking()
+            .ToListAsync(cancellationToken);
+    }
 }
